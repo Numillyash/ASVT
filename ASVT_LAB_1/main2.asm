@@ -1,68 +1,59 @@
+.device atmega328p ; Необходимо для компилятора
 
-;
-;
-;
-; AssemblerApplication1.asm
-;
-; Created: 06.02.2023 18:38:51
-; Author : Georgul
-;
-.device atmega328p
-
-.def TMP = R20
+.def TMP = R20 ; Установка R20 как регистра для временного хранения
 
 .org $000
    JMP reset ; Указатель на начало программы
 
-; Функция паузы 54-227-8
+; Функция паузы 
 delay:
-	LDI R30, 20
-	LDI R31, 250;
+	LDI R29, 20 ; Установка регистра R29 (x) в значение 20
+	LDI R30, 250 ; Установка регистра R30 (y) в значение 250
 	
 delay_sub:
-	INC R30
-   NOP
-   NOP
-   NOP
-   NOP
-   NOP
-   NOP
-   NOP
-   NOP
-   NOP
-   NOP
-   NOP
-   NOP
-   NOP
-   NOP
-   NOP
-   NOP
-   NOP
-   NOP
-   NOP
-   NOP
-   NOP
-   NOP
-	BRNE delay_sub
+	INC R29 ; Инкрементируем x
+    NOP     ; Много nop
+    NOP
+    NOP
+    NOP
+    NOP
+    NOP
+    NOP
+    NOP
+    NOP
+    NOP
+    NOP
+    NOP
+    NOP
+    NOP
+    NOP
+    NOP
+    NOP
+    NOP
+    NOP
+    NOP
+    NOP
+    NOP
+	BRNE delay_sub ; Если x стал 0, пропускаем. Иначе переход
 	NOP
-	DEC R31
-	BRNE delay_sub
-	RET
+	DEC R30 ; Декриментируем y
+	BRNE delay_sub ; Если y стал 0, пропускаем. Иначе переход
+	RET ; Возврат по адресу возврата в основной цикл
 
 ; Начальная настройка
 reset:
 ; настройка исходных значений
-   LDI  TMP, 0x01;
-   MOV  R0, TMP
-   CLR  TMP;
+   LDI  TMP, 0x01 ; Положили 1 в temp
+   MOV  R0, TMP ; Положили temp в R0
+   CLR  TMP ; Очистили temp
 ; настройка портов ввода-вывода
-   SER  TMP ; 0xFF
-   OUT  DDRD, TMP ; Вывод
+   SER  TMP ; Положили 0xFF в temp (-//- LDI 0xFF)
+   OUT  DDRD, TMP ; Открыли все восемь пинов порта D на запись
 ; Установка вершины стека в конец ОЗУ
    LDI  TMP, HIGH(RAMEND) ; Старшие разряды адреса
-   OUT  SPH, TMP 
+   OUT  SPH, TMP ; Установили старшие разряды ESP
    LDI  TMP, LOW(RAMEND) ; Младшие разряды адреса
-   OUT  SPL, TMP
+   OUT  SPL, TMP ; Установили младшие разряды ESP
 
 ; Основной цикл
 loop:
@@ -74,5 +65,3 @@ loop:
    CALL delay;
 ; Возврат в начало основного цикла
    RJMP loop ;
-
-; В программе используется R31, который зарезервирован под SREG?

@@ -1,5 +1,11 @@
 import pandas as pd
 import os
+import sys
+
+if len(sys.argv) != 2:
+    print('Usage: python my_script.py filename (without .hex)')
+    print(sys.argv)
+    sys.exit(1)
 
 script_path = os.path.abspath(__file__)
 dir_path = os.path.dirname(script_path)
@@ -22,14 +28,16 @@ dir_path = os.path.dirname(script_path)
 # print("]")
 
 # hex_file_name = f"{dir_path}/main.hex"
-file_name = 'main2'
-hex_file_name = f"{dir_path}/{file_name}.hex"
+file_name = sys.argv[1]
+hex_file_name = f"{dir_path}/{sys.argv[1]}.hex"
+
+# print(hex_file_name)
 
 data_str = []
 with open(hex_file_name, 'r') as file:
     for line in file:
         line = line.strip()  # удаляем перенос строки
-        print(line)
+        # print(line)
         if line[0] == ':' and len(line) > 11:
             byte_count = int(line[1:3], 16)
             address = int(line[3:7], 16)
@@ -690,7 +698,7 @@ def decode_1word(esp, command, string, strings, labels):
         result_addr = ''
     elif(command == 'IN'):
         bit_str_A = my_string[5:7] + my_string[12:16]
-        bit_str_r = my_string[7:12]
+        bit_str_d = my_string[7:12]
 
         keyA = '0x'+hex(int(bit_str_A, 2))[2:].zfill(2).upper()
          
@@ -966,7 +974,7 @@ def find_string(bit_str_arr):
         for x in range(len(bit_str_arr)):
             for a in range(len(lst_labels)):
                 if lst_labels[a][1] == x:
-                    f.write(f'label_{a}:' + '\n')
+                    f.write(f'label_{a}:'.upper() + '\n')
             f.write(lst_strings[x] + '\n')
 
 find_string(bit_strings)

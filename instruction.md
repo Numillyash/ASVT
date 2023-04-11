@@ -13,4 +13,4 @@ Global variables use 13 bytes (0%) of dynamic memory, leaving 2035 bytes for loc
 
 Далее необходимо вызвать **_copy_hex.sh /tmp/arduino_build_911156/Arduino.ino.hex_**
 
-Данный скрипт скопирует hex файл и запустит python скрипт для расшифровки. Все результаты попадут в папку {hex_file_name}\_customHex.
+Данный скрипт скопирует hex файл и запустит python скрипт для расшифровки. Все результаты попадут в текущую папку.

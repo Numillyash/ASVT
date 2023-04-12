@@ -118,9 +118,9 @@ def decode_2word(esp, command, string, strings, labels):
         bit_str_d = my_string[7:12]
         bit_str_k = my_string[16:32]
         if(command == 'LDS'):
-            result_addr = 'R' + str(int(bit_str_d, 2)) + ', 0x' + hex(int(bit_str_k, 2))[2:].zfill(6)
+            result_addr = 'R' + str(int(bit_str_d, 2)) + ', ' + str(int(bit_str_k, 2))
         if(command == 'STS'):
-            result_addr = '0x' + hex(int(bit_str_k, 2))[2:].zfill(6) + ', R' + str(int(bit_str_d, 2))
+            result_addr = '' + str(int(bit_str_k, 2)) + ', R' + str(int(bit_str_d, 2))
            
     comm_addr_l = hex(esp)[2:].zfill(6)
     comm_addr_h = hex(esp+1)[2:].zfill(6)
@@ -941,10 +941,15 @@ def decode_1word(esp, command, string, strings, labels):
 
 def find_string(bit_str_arr):
     lss_file_name = f"{dir_path}/{file_name}.lss"
+    asm_file_name = f"{dir_path}/{file_name}.asm"
     lst_strings = []
     lst_labels = [[0, -1]]
     with open(lss_file_name, 'w') as f:
+        wasDouble = False
         for x in range(len(bit_str_arr)):
+            if wasDouble:
+                wasDouble = False
+                continue
             comped_symbols = -1
             words = 0
             command = ''
@@ -963,6 +968,7 @@ def find_string(bit_str_arr):
                         if(returned >= 1):
                             words = 2
                             command = i[0]
+                            wasDouble = True
                             # print(new_str, command)
                             # decode_2word(x, i[0], new_str)
             if words == 1:
@@ -976,7 +982,12 @@ def find_string(bit_str_arr):
                 if lst_labels[a][1] == x:
                     f.write(f'label_{a}:'.upper() + '\n')
             f.write(lst_strings[x] + '\n')
-
+    with open(asm_file_name, 'w') as f:
+        for x in range(len(bit_str_arr)):
+            for a in range(len(lst_labels)):
+                if lst_labels[a][1] == x:
+                    f.write(f'label_{a}:'.upper() + '\n')
+            f.write('   ' + lst_strings[x][12:] + '\n')
 find_string(bit_strings)
 
 

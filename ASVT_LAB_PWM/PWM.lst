@@ -1,0 +1,262 @@
+gavrasm Gerd's AVR assembler version 5.4 (C)2022 by DG4FAC
+----------------------------------------------------------
+Source file: PWM.asm
+Hex file:    PWM.hex
+Eeprom file: PWM.eep
+Compiled:    12.04.2023, 14:59:06
+Pass:        2
+     1: ;
+     2: ; AssemblerApplication1.asm
+     3: ;
+     4: ; Created: 06.02.2023 18:38:51
+     5: ; Author : Georgul
+     6: ;
+     7: .device atmega328p
+     8: LABEL_8:
+     9: 000000   940C  JMP    LABEL_1
+        000001   0034
+    10:    
+    11: 000002   940C  JMP    LABEL_2
+        000003   0046
+    12:    
+    13: 000004   940C  JMP    LABEL_2
+        000005   0046
+    14:    
+    15: 000006   940C  JMP    LABEL_2
+        000007   0046
+    16:    
+    17: 000008   940C  JMP    LABEL_2
+        000009   0046
+    18:    
+    19: 00000A   940C  JMP    LABEL_2
+        00000B   0046
+    20:    
+    21: 00000C   940C  JMP    LABEL_2
+        00000D   0046
+    22:    
+    23: 00000E   940C  JMP    LABEL_2
+        00000F   0046
+    24:    
+    25: 000010   940C  JMP    LABEL_2
+        000011   0046
+    26:    
+    27: 000012   940C  JMP    LABEL_2
+        000013   0046
+    28:    
+    29: 000014   940C  JMP    LABEL_2
+        000015   0046
+    30:    
+    31: 000016   940C  JMP    LABEL_2
+        000017   0046
+    32:    
+    33: 000018   940C  JMP    LABEL_2
+        000019   0046
+    34:    
+    35: 00001A   940C  JMP    LABEL_2
+        00001B   0046
+    36:    
+    37: 00001C   940C  JMP    LABEL_2
+        00001D   0046
+    38:    
+    39: 00001E   940C  JMP    LABEL_2
+        00001F   0046
+    40:    
+    41: 000020   940C  JMP    LABEL_3
+        000021   0048
+    42:    
+    43: 000022   940C  JMP    LABEL_2
+        000023   0046
+    44:    
+    45: 000024   940C  JMP    LABEL_2
+        000025   0046
+    46:    
+    47: 000026   940C  JMP    LABEL_2
+        000027   0046
+    48:    
+    49: 000028   940C  JMP    LABEL_2
+        000029   0046
+    50:    
+    51: 00002A   940C  JMP    LABEL_2
+        00002B   0046
+    52:    
+    53: 00002C   940C  JMP    LABEL_2
+        00002D   0046
+    54:    
+    55: 00002E   940C  JMP    LABEL_2
+        00002F   0046
+    56:    
+    57: 000030   940C  JMP    LABEL_2
+        000031   0046
+    58:    
+    59: 000032   940C  JMP    LABEL_2
+        000033   0046
+    60:    
+    61: LABEL_1:
+    62: 000034   2411  CLR    R1
+    63: 000035   BE1F  OUT    SREG, R1
+    64: 000036   EFCF  SER    R28
+    65: 000037   E0D8  LDI    R29, 8
+    66: 000038   BFDE  OUT    SPH, R29
+    67: 000039   BFCD  OUT    SPL, R28
+    68: 00003A   E021  LDI    R18, 1
+    69: 00003B   E0A0  LDI    R26, 0
+    70: 00003C   E0B1  LDI    R27, 1
+    71: 00003D   C001  RJMP   LABEL_4
+    72: LABEL_5:
+    73: 00003E   921D  ST     X+, R1
+    74: LABEL_4:
+    75: 00003F   30A9  CPI    R26, 9
+    76: 000040   07B2  CPC    R27, R18
+    77: 000041   F7E1  BRNE   LABEL_5
+    78: 000042   940E  CALL   LABEL_6
+        000043   0092
+    79:    
+    80: 000044   940C  JMP    LABEL_7
+        000045   00B2
+    81:    
+    82: LABEL_2:
+    83: 000046   940C  JMP    LABEL_8
+        000047   0000
+    84:    
+    85: LABEL_3:
+    86: 000048   921F  PUSH   R1
+    87: 000049   920F  PUSH   R0
+    88: 00004A   B60F  IN     R0, SREG
+    89: 00004B   920F  PUSH   R0
+    90: 00004C   2411  CLR    R1
+    91: 00004D   932F  PUSH   R18
+    92: 00004E   933F  PUSH   R19
+    93: 00004F   938F  PUSH   R24
+    94: 000050   939F  PUSH   R25
+    95: 000051   93AF  PUSH   R26
+    96: 000052   93BF  PUSH   R27
+    97: 000053   9180  LDS    R24, 261
+        000054   0105
+    98:    
+    99: 000055   9190  LDS    R25, 262
+        000056   0106
+   100:    
+   101: 000057   91A0  LDS    R26, 263
+        000058   0107
+   102:    
+   103: 000059   91B0  LDS    R27, 264
+        00005A   0108
+   104:    
+   105: 00005B   9130  LDS    R19, 260
+        00005C   0104
+   106:    
+   107: 00005D   E023  LDI    R18, 3
+   108: 00005E   0F22  LSL    R18
+   109: 00005F   372D  CPI    R18, 125
+   110: 000060   F558  BRCC   LABEL_9
+   111: 000061   9601  ADIW   R24, 1
+   112: 000062   1FAA  ROL    R26
+   113: 000063   1FBB  ROL    R27
+   114: LABEL_10:
+   115: 000064   9320  STS    260, R18
+        000065   0104
+   116:    
+   117: 000066   9380  STS    261, R24
+        000067   0105
+   118:    
+   119: 000068   9390  STS    262, R25
+        000069   0106
+   120:    
+   121: 00006A   93A0  STS    263, R26
+        00006B   0107
+   122:    
+   123: 00006C   93B0  STS    264, R27
+        00006D   0108
+   124:    
+   125: 00006E   9180  LDS    R24, 256
+        00006F   0100
+   126:    
+   127: 000070   9190  LDS    R25, 257
+        000071   0101
+   128:    
+   129: 000072   91A0  LDS    R26, 258
+        000073   0102
+   130:    
+   131: 000074   91B0  LDS    R27, 259
+        000075   0103
+   132:    
+   133: 000076   9601  ADIW   R24, 1
+   134: 000077   1FAA  ROL    R26
+   135: 000078   1FBB  ROL    R27
+   136: 000079   9380  STS    256, R24
+        00007A   0100
+   137:    
+   138: 00007B   9390  STS    257, R25
+        00007C   0101
+   139:    
+   140: 00007D   93A0  STS    258, R26
+        00007E   0102
+   141:    
+   142: 00007F   93B0  STS    259, R27
+        000080   0103
+   143:    
+   144: 000081   91BF  POP    R27
+   145: 000082   91AF  POP    R26
+   146: 000083   919F  POP    R25
+   147: 000084   918F  POP    R24
+   148: 000085   913F  POP    R19
+   149: 000086   912F  POP    R18
+   150: 000087   900F  POP    R0
+   151: 000088   BE0F  OUT    SREG, R0
+   152: 000089   900F  POP    R0
+   153: 00008A   901F  POP    R1
+   154: 00008B   9518  RETI   
+   155: LABEL_9:
+   156: 00008C   E826  LDI    R18, 134
+   157: 00008D   0F22  LSL    R18
+   158: 00008E   9602  ADIW   R24, 2
+   159: 00008F   1FAA  ROL    R26
+   160: 000090   1FBB  ROL    R27
+   161: 000091   CFD2  RJMP   LABEL_10
+   162: LABEL_6:
+   163: 000092   94F8  CLI    
+   164: 000093   9A56  SBI    DDRD, 6
+   165: 000094   9A55  SBI    DDRD, 5
+   166: 000095   BC14  OUT    TCCR0A, R1
+   167: 000096   BC15  OUT    TCCR0B, R1
+   168: 000097   BC16  OUT    TCNT0, R1
+   169: 000098   B584  IN     R24, TCCR0A
+   170: 000099   6280  ORI    R24, 32
+   171: 00009A   BD84  OUT    TCCR0A, R24
+   172: 00009B   B584  IN     R24, TCCR0A
+   173: 00009C   6083  ORI    R24, 3
+   174: 00009D   BD84  OUT    TCCR0A, R24
+   175: 00009E   B585  IN     R24, TCCR0B
+   176: 00009F   6088  ORI    R24, 8
+   177: 0000A0   BD85  OUT    TCCR0B, R24
+   178: 0000A1   B585  IN     R24, TCCR0B
+   179: 0000A2   6082  ORI    R24, 2
+   180: 0000A3   BD85  OUT    TCCR0B, R24
+   181: 0000A4   EE88  LDI    R24, 232
+   182: 0000A5   BD87  OUT    OCR0A, R24
+   183: 0000A6   E486  LDI    R24, 70
+   184: 0000A7   BD88  OUT    OCR0B, R24
+   185: 0000A8   9478  SEI    
+   186: 0000A9   E081  LDI    R24, 1
+   187: 0000AA   E023  LDI    R18, 3
+   188: 0000AB   E33D  LDI    R19, 61
+   189: LABEL_12:
+   190: 0000AC   BD88  OUT    OCR0B, R24
+   191: 0000AD   01F9  MOVW   R30, R18
+   192: LABEL_11:
+   193: 0000AE   9731  SBIW   R30, 1
+   194: 0000AF   F7F1  BRNE   LABEL_11
+   195: 0000B0   5F8F  SUBI   R24, 255
+   196: 0000B1   CFFA  RJMP   LABEL_12
+   197: LABEL_7:
+   198: 0000B2   94F8  CLI    
+   199: LABEL_13:
+   200: 0000B3   CFFF  RJMP   LABEL_13
+
+Program             :      180 words.
+Constants           :        0 words.
+Total program memory:      180 words.
+Eeprom space        :        0 bytes.
+Data segment        :        0 bytes.
+Compilation completed, no errors.
+Compilation ended 12.04.2023, 14:59:06

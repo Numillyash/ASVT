@@ -34,7 +34,7 @@ def func(x, y, freq, nop1, nop2):
 # 8
 print('Time for ATMega32: ', 1000*func(213, 241, 8*10**6, 10, 1), 'msec')
 print('Time for ATMega328p: ', 1000*func(20, 250, 16*10**6, 22, 0), 'msec')
-
+print('MAX Time for ATMega328p: ', 1000*func(250, 250, 16*10**6, 30, 30), 'msec')
 def reverseFunc(targetTime, targetFrequency):
     old = 100000
     min_err = 100000
@@ -43,16 +43,16 @@ def reverseFunc(targetTime, targetFrequency):
         if x%16==0:
             print("x:", x)
         for y in range(256):
-            for nop1 in range(200):
-                for nop2 in range(200):
+            for nop1 in range(30):
+                for nop2 in range(30):
                     result = func(x, y, targetFrequency, nop1, nop2)
                     err = abs(targetTime - 1000*result)
                     if(err < min_err):
                         min_err = err
-                        parametres = [x, y, nop1, nop2, min_err]Ы
+                        parametres = [x, y, nop1, nop2, min_err]
     return parametres
-
-print("Parametres for min error: ", reverseFunc(100, 16*10**6))
-
+res = reverseFunc(100, 16*10**6)
+print("Parametres for min error: ", res)
+print('Time for ATMega328p: ', 1000*func(res[0], res[1], 16*10**6, res[2], res[3]), 'msec')
 # Пару слов о том как запустить на ардуине
 # Microchip studio, AVRdude_prog и usbASP. Все

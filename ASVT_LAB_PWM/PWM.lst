@@ -3,7 +3,7 @@ gavrasm Gerd's AVR assembler version 5.4 (C)2022 by DG4FAC
 Source file: PWM.asm
 Hex file:    PWM.hex
 Eeprom file: PWM.eep
-Compiled:    13.04.2023, 04:12:40
+Compiled:    13.04.2023, 04:22:17
 Pass:        2
      1: ;
      2: ; AssemblerApplication1.asm
@@ -29,7 +29,7 @@ Pass:        2
     22: 000008   E0B1  LDI    R27, 1        ; R27 = 1
     23: 000009   C001  RJMP   sreg_to_stack_sub
     24: sreg_to_stack:
-    25: 00000A   921D  ST     X+, R1
+    25: 00000A   921D  ST     X+, R1        ; add SREG to stack
     26: sreg_to_stack_sub:
     27: 00000B   30A9  CPI    R26, 9        ; if R26 >= 9 then C = 0
     28: 00000C   07B2  CPC    R27, R18      ; if R27 == R18+C then Z = 0
@@ -211,4 +211,4 @@ Total program memory:      174 words.
 Eeprom space        :        0 bytes.
 Data segment        :        0 bytes.
 Compilation completed, no errors.
-Compilation ended 13.04.2023, 04:12:40
+Compilation ended 13.04.2023, 04:22:17

@@ -159,7 +159,7 @@ LABEL_15:
    CALL   LABEL_13
    MOVW   R8, R22
    MOVW   R10, R24
-   LDI    R24, 240
+   LDI    R24, 42
    MOV    R12, R24
    MOV    R13, R1
    MOV    R14, R1

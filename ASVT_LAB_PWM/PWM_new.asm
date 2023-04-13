@@ -32,4 +32,48 @@ loop:
    COM    pinD6_reg              ; d6 = 255 - d6
    OUT    OCR0A, pinD6_reg       ; setup d6 percent
    SUBI   pinD5_reg, 255         ; d5 ++
+   CALL   delay_setup
    RJMP   loop
+delay_setup:
+   CLR R16
+   CLR R17
+   CLR R18
+   CLR tmp_reg
+   LDI R16, 0 
+   LDI R17, 2 ; delay 42
+   LSL R16
+   BST R17, 7
+   BLD R16, 0
+   LSL R17
+   LSL R16
+   BST R17, 7
+   BLD R16, 0
+   LSL R17
+delay_cycle:
+   SUBI R18, 1 ; 1 tick
+   SBCI R17, 0 ; 1 tick
+   SBCI R16, 0 ; 1 tick
+
+   CPSE R16, tmp_reg ; 1 ticks, if equal then skip (2 ticks)
+   RJMP wait_nop_8 ; 2 ticks
+   CPSE R17, tmp_reg ; 1 ticks, if equal then skip (2 ticks)
+   RJMP wait_nop_5 ; 2 ticks
+   CPSE R18, tmp_reg ; 1 ticks, if equal then skip (2 ticks)
+   RJMP wait_nop_2 ; 2 ticks
+   NOP
+   NOP
+   NOP
+   RET                        ; go back, 4 ticks
+wait_nop_8:
+   NOP
+   NOP
+   NOP
+wait_nop_5:
+   NOP
+   NOP
+   NOP
+wait_nop_2:
+   NOP
+   NOP
+   RJMP   delay_cycle
+   

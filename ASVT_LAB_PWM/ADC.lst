@@ -1,0 +1,122 @@
+gavrasm Gerd's AVR assembler version 5.4 (C)2022 by DG4FAC
+----------------------------------------------------------
+Source file: ADC.asm
+Hex file:    ADC.hex
+Eeprom file: ADC.eep
+Compiled:    13.04.2023, 22:26:38
+Pass:        2
+     1: ;
+     2: ; AssemblerApplication1.asm
+     3: ;
+     4: ; Created: 06.02.2023 18:38:51
+     5: ; Author : Georgul
+     6: ;
+     7: .device atmega328p
+     8: .def	wreg		=R16
+     9: .def	duration	=R17
+    10: .def	wreg2		=R18
+    11: 
+    12: init:
+    13: 
+    14: 000000   EF0F  ldi		wreg,low(RAMEND)             
+    15: 000001   BF0D  out		SPL,wreg
+    16: 
+    17: 000002   E008  ldi		wreg,high(RAMEND)	; Stack Pointer = $45F
+    18: 000003   BF0E  out		SPH,wreg
+    19: 
+    20: 000004   94F8  cli							; ��������� ����������
+    21: 
+    22: 
+    23: 000005   E803  ldi wreg, 0b10000011		; ���. ���, ������. ������., ���������� ���������, ��/8 (125 kHz)
+    24: 000006   9300  STS ADCSRA, wreg
+        000007   007A
+    25: 
+    26: 000008   E60E  ldi wreg, 0b01101110		; AVcc, ����. ����. �� Aref, ������. �� ���. ����, channel 1.23V bg
+    27: 000009   9300  STS ADMUX, wreg
+        00000A   007C
+    28: 
+    29: 00000B   D01B  rcall adc_convert
+    30: 
+    31:     
+    32: 00000C   E000  ldi		wreg,0x00		
+    33: 00000D   B905  out		PORTB,wreg			; ������ 0 � ����
+    34: 00000E   E002  ldi		wreg,0b00000010		; PortB.1 (OC1A) - Output
+    35: 00000F   B904  out		DDRB,wreg		
+    36: 	
+    37: 000010   E801  ldi wreg, 0b10000001		; �����. 8 ������ ���
+    38: 000011   9300  STS TCCR1A, wreg
+        000012   0080
+    39: 
+    40: 000013   E009  ldi wreg, 0b00001001		; CK/1
+    41: 000014   9300  STS TCCR1B, wreg
+        000015   0081
+    42: 
+    43: 
+    44: main:
+    45: 	
+    46: 000016   EF0A  ldi wreg, 250				; 25mS
+    47: 000017   D008  rcall delay
+    48: 
+    49: 000018   E605  ldi wreg, 0b01100101		; ADC Channel 5 (PortC.5 ; pin 28)
+    50: 000019   D00D  rcall adc_convert
+    51: 	
+    52: 00001A   E020  ldi wreg2, 0x00
+    53: 00001B   9320  STS OCR1AH, wreg2
+        00001C   0089
+    54: 00001D   9300  STS OCR1AL, wreg
+        00001E   0088
+    55: 
+    56: 00001F   CFF6  rjmp main
+    57: 
+    58: 
+    59: 
+    60: delay:							; 0.1mS * wreg
+    61: 000020   E118  ldi duration, 24
+    62: 		cycle:
+    63: 000021   0000  nop
+    64: 000022   951A  dec 	duration
+    65: 000023   F7E9  brne	cycle
+    66: 000024   950A  dec 	wreg
+    67: 000025   F7D1  brne	delay
+    68: 000026   9508  ret
+    69:    
+    70: adc_convert:
+    71: 
+    72: 000027   9300  STS ADMUX, wreg				; wreg contains channel
+        000028   007C
+    73: 000029   9190  LDS R25, ADCSRA
+        00002A   007A
+    74: 00002B   B995  OUT PORTB, R25
+    75: 00002C   9A2E  sbi PORTB, ADSC
+    76: 00002D   B195  IN R25, PORTB
+    77: 00002E   9390  STS ADCSRA, R25
+        00002F   007A
+    78: 
+    79: 000030   9190  LDS R25, ADCSRA
+        000031   007A
+    80: 000032   B995  OUT PORTB, R25
+    81: 000033   992E  sbic PORTB , ADSC
+    82: 000034   CFFC  rjmp PC-3
+    83: 000035   B195  IN R25, PORTB
+    84: 000036   9390  STS ADCSRA, R25
+        000037   007A
+    85: 
+    86: 
+    87: 000038   9100  LDS wreg, ADCL				; ������ ������������ (������ ������ �������� ADCL)
+        000039   0078
+    88: 00003A   9100  LDS wreg, ADCH				; wreg contains result
+        00003B   0079
+    89: 
+    90: 00003C   9508  ret
+    91: 
+    92: 
+    93: 
+ -> Warning 001: 1 symbol(s) defined, but not used!
+
+Program             :       61 words.
+Constants           :        0 words.
+Total program memory:       61 words.
+Eeprom space        :        0 bytes.
+Data segment        :        0 bytes.
+Compilation completed, no errors.
+Compilation ended 13.04.2023, 22:26:38

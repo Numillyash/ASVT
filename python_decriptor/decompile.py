@@ -670,9 +670,9 @@ def decode_1word(esp, command, string, strings, labels):
         bit_str_d = my_string[8:12]
         result_addr = 'R' + str(int(bit_str_d, 2)+16) + ', ' + str(int(bit_str_k, 2))
     elif(command == 'CPSE'):
-        bit_str_k = my_string[4:8] + my_string[12:16]
-        bit_str_d = my_string[8:12]
-        result_addr = 'R' + str(int(bit_str_d, 2)+16) + ', ' + str(int(bit_str_k, 2))
+        bit_str_r = my_string[6:7] + my_string[12:16]
+        bit_str_d = my_string[7:12]
+        result_addr = 'R' + str(int(bit_str_d, 2)) + ', R' + str(int(bit_str_r, 2))
     elif(command == 'DEC'):
         bit_str_d = my_string[7:12]
         result_addr = 'R' + str(int(bit_str_d, 2))

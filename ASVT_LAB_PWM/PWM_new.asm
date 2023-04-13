@@ -39,8 +39,8 @@ delay_setup:
    CLR R17
    CLR R18
    CLR tmp_reg
-   LDI R16, 0 
-   LDI R17, 2 ; delay 42
+   LDI R16, 0 ; here is the hihest byte
+   LDI R17, 2 ; here is the lowest byte
    LSL R16
    BST R17, 7
    BLD R16, 0

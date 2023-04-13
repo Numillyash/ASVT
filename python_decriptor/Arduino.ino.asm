@@ -1,56 +1,30 @@
 LABEL_8:
    JMP    LABEL_1
-   
    JMP    LABEL_2
-   
    JMP    LABEL_2
-   
    JMP    LABEL_2
-   
    JMP    LABEL_2
-   
    JMP    LABEL_2
-   
    JMP    LABEL_2
-   
    JMP    LABEL_2
-   
    JMP    LABEL_2
-   
    JMP    LABEL_2
-   
    JMP    LABEL_2
-   
    JMP    LABEL_2
-   
    JMP    LABEL_2
-   
    JMP    LABEL_2
-   
    JMP    LABEL_2
-   
    JMP    LABEL_2
-   
    JMP    LABEL_3
-   
    JMP    LABEL_2
-   
    JMP    LABEL_2
-   
    JMP    LABEL_2
-   
    JMP    LABEL_2
-   
    JMP    LABEL_2
-   
    JMP    LABEL_2
-   
    JMP    LABEL_2
-   
    JMP    LABEL_2
-   
    JMP    LABEL_2
-   
 LABEL_1:
    CLR    R1
    OUT    SREG, R1
@@ -69,12 +43,9 @@ LABEL_4:
    CPC    R27, R18
    BRNE   LABEL_5
    CALL   LABEL_6
-   
    JMP    LABEL_7
-   
 LABEL_2:
    JMP    LABEL_8
-   
 LABEL_3:
    PUSH   R1
    PUSH   R0
@@ -88,15 +59,10 @@ LABEL_3:
    PUSH   R26
    PUSH   R27
    LDS    R24, 261
-   
    LDS    R25, 262
-   
    LDS    R26, 263
-   
    LDS    R27, 264
-   
    LDS    R19, 260
-   
    LDI    R18, 3
    LSL    R18
    CPI    R18, 125
@@ -106,34 +72,21 @@ LABEL_3:
    ROL    R27
 LABEL_10:
    STS    260, R18
-   
    STS    261, R24
-   
    STS    262, R25
-   
    STS    263, R26
-   
    STS    264, R27
-   
    LDS    R24, 256
-   
    LDS    R25, 257
-   
    LDS    R26, 258
-   
    LDS    R27, 259
-   
    ADIW   R24, 1
    ROL    R26
    ROL    R27
    STS    256, R24
-   
    STS    257, R25
-   
    STS    258, R26
-   
    STS    259, R27
-   
    POP    R27
    POP    R26
    POP    R25

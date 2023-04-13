@@ -706,24 +706,59 @@ def decode_1word(esp, command, string, strings, labels):
             result_addr = 'R' + str(int(bit_str_d, 2)) + ', ' + dict_keywords[keyA]
         else:
             result_addr = 'R' + str(int(bit_str_d, 2)) + ', ' + str(int(bit_str_r, 2))
-
     elif(command == 'INC'):
         bit_str_d = my_string[7:12]
         result_addr = 'R' + str(int(bit_str_d, 2))
     elif(command == 'LD'):
+        bit_str_mode = my_string[3:4] + my_string[12:16]
+        mode = ''
+        if(bit_str_mode == '11100'):
+            mode = 'X'
+        elif(bit_str_mode == '11101'):
+            mode = 'X+'
+        elif(bit_str_mode == '11110'):
+            mode = '-X'
+        elif(bit_str_mode == '01000'):
+            mode = 'Y'
+        elif(bit_str_mode == '11001'):
+            mode = 'Y+'
+        elif(bit_str_mode == '11010'):
+            mode = '-Y'
+        elif(bit_str_mode == '00000'):
+            mode = 'Z'
+        elif(bit_str_mode == '10001'):
+            mode = 'Z+'
+        elif(bit_str_mode == '10010'):
+            mode = '-Z'
         bit_str_d = my_string[7:12]
-        result_addr = 'R' + str(int(bit_str_d, 2)) + ', OZU'
+        result_addr = 'R' + str(int(bit_str_d, 2)) + ', ' + mode
     elif(command == 'LDD'):
-        bit_str_d = my_string[7:12]
+        bit_str_mode = my_string[12:13]
+        mode = ''
         bit_str_q = my_string[13:16]
-        result_addr = 'R' + str(int(bit_str_d, 2)) + ', OZU + '  + str(int(bit_str_q, 2))
+        if(bit_str_mode == '1'):
+            mode = 'Y+' + str(int(bit_str_q, 2))
+        elif(bit_str_mode == '0'):
+            mode = 'Z+' + str(int(bit_str_q, 2))
+        bit_str_d = my_string[7:12]
+        result_addr = 'R' + str(int(bit_str_d, 2)) + ', ' + mode 
     elif(command == 'LDI'):
         bit_str_k = my_string[4:8] + my_string[12:16]
         bit_str_d = my_string[8:12]
         result_addr = 'R' + str(int(bit_str_d, 2)+16) + ', ' + str(int(bit_str_k, 2))
     elif(command == 'LPM'):
+        bit_str_mode = my_string[6:7]+my_string[12:16]
+        mode = ''
+        result_addr = ''
         bit_str_d = my_string[7:12]
-        result_addr = 'R' + str(int(bit_str_d, 2)) + ', OZU'
+        if(bit_str_mode == '11000'):
+            result_addr = ''
+        elif(bit_str_mode == '00100'):
+            mode = ', Z'
+            result_addr = 'R' + str(int(bit_str_d, 2)) + mode
+        elif(bit_str_mode == '00101'):
+            mode = ', Z+'
+            result_addr = 'R' + str(int(bit_str_d, 2)) + mode
     elif(command == 'LSL'):
         bit_str_r = my_string[6:7] + my_string[12:16]
         bit_str_d = my_string[7:12]
@@ -907,12 +942,38 @@ def decode_1word(esp, command, string, strings, labels):
     elif(command == 'SPM'):
         result_addr = ''    
     elif(command == 'ST'):
+        bit_str_mode = my_string[3:4] + my_string[12:16]
+        mode = ''
+        if(bit_str_mode == '11100'):
+            mode = 'X'
+        elif(bit_str_mode == '11101'):
+            mode = 'X+'
+        elif(bit_str_mode == '11110'):
+            mode = '-X'
+        elif(bit_str_mode == '01000'):
+            mode = 'Y'
+        elif(bit_str_mode == '11001'):
+            mode = 'Y+'
+        elif(bit_str_mode == '11010'):
+            mode = '-Y'
+        elif(bit_str_mode == '00000'):
+            mode = 'Z'
+        elif(bit_str_mode == '10001'):
+            mode = 'Z+'
+        elif(bit_str_mode == '10010'):
+            mode = '-Z'
         bit_str_d = my_string[7:12]
-        result_addr = 'R' + str(int(bit_str_d, 2)) + ', OZU'
+        result_addr = mode + ', R' + str(int(bit_str_d, 2))
     elif(command == 'STD'):
-        bit_str_d = my_string[7:12]
+        bit_str_mode = my_string[12:13]
+        mode = ''
         bit_str_q = my_string[13:16]
-        result_addr = 'R' + str(int(bit_str_d, 2)) + ', OZU + '  + str(int(bit_str_q, 2))
+        if(bit_str_mode == '1'):
+            mode = 'Y+' + str(int(bit_str_q, 2))
+        elif(bit_str_mode == '0'):
+            mode = 'Z+' + str(int(bit_str_q, 2))
+        bit_str_d = my_string[7:12]
+        result_addr = mode + ', R' + str(int(bit_str_d, 2)) 
     elif(command == 'SUB'):
         bit_str_r = my_string[6:7] + my_string[12:16]
         bit_str_d = my_string[7:12]
@@ -977,6 +1038,12 @@ def find_string(bit_str_arr):
                 if(x != len(bit_str_arr)-1):
                     new_str = bit_str_arr[x] + '.' + bit_str_arr[x+1]
                     decode_2word(x, command, new_str, lst_strings, lst_labels)
+            else:
+                print ('ERROR!')
+                print (bit_str_arr[x])
+                print (hex(x))
+                print (hex(int(bit_str_arr[x].replace(".", ""), 2))[2:].zfill(4))
+                exit(-1)
         for x in range(len(bit_str_arr)):
             for a in range(len(lst_labels)):
                 if lst_labels[a][1] == x:
@@ -987,7 +1054,8 @@ def find_string(bit_str_arr):
             for a in range(len(lst_labels)):
                 if lst_labels[a][1] == x:
                     f.write(f'label_{a}:'.upper() + '\n')
-            f.write('   ' + lst_strings[x][12:] + '\n')
+            if len(lst_strings[x]) > 12:
+                f.write('   ' + lst_strings[x][12:] + '\n')
 find_string(bit_strings)
 
 

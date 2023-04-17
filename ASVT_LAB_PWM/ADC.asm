@@ -13,9 +13,15 @@
 .def lbyteNum = R28
 .def delay_reg = R29
 .def tmp_reg = R20
+
+.org $000
+	jmp init
+
 init:
 	ldi wreg, 0xFF;(1<<DDB3)|(1<<DDB2)|(1<<DDB4)|(1<<DDB0)
 	OUT  DDRB, wreg
+	ldi wreg, 0xFF;(1<<DDB3)|(1<<DDB2)|(1<<DDB4)|(1<<DDB0)
+	OUT  DDRD, wreg
 	ldi wreg, 0b00000011
 	OUT  DDRC, wreg
 	ldi wreg, 0b11100010
@@ -63,7 +69,7 @@ main:
 	
 	
 	; 1-s digit for PWM
-	ldi R30, 0b11111110
+	ldi R30, 0b00000001;0b11111110
 	ldi wreg2, 0x00
 	OUT PORTD, wreg2
 	STS OCR1AH, wreg2
@@ -75,7 +81,7 @@ main:
 	STS OCR1AH, wreg2
 	STS OCR1AL, wreg2
 	; SEND adc to 2-d digit
-	ldi R30, 0b11111001
+	ldi R30, 0b00000100;0b11111001
 	CLR R24
 	BST wreg, 0
 	BLD R24, 0
@@ -90,7 +96,7 @@ main:
 	call movBytes ; set bytes
 	
 	; hbyte
-	ldi R30, 0b11110101 ; 3-d digit
+	ldi R30, 0b00001000;0b11110101 ; 3-d digit
 	MOV printByte, hbyteNum
 	call printByte_func
 	CLR R24
@@ -104,7 +110,7 @@ main:
 	rcall delay_setup
 
 	; lbyte
-	ldi R30, 0b11101101 ; 4-d digit
+	ldi R30, 0b00010000;0b11101101 ; 4-d digit
 	MOV printByte, lbyteNum
 	call printByte_func
 	CLR R24

@@ -5,90 +5,171 @@
 ; Author : Georgul
 ;
 .device atmega328p
-.def	wreg		=R16
-.def	duration	=R17
-.def	wreg2		=R18
-.def printByte = R26
-.def hbyteNum = R27
-.def lbyteNum = R28
-.def delay_reg = R29
-.def tmp_reg = R20
+.def	wreg		= R16
+.def	wreg2		= R17 
+.def	tmp2		= R18 ;; non use
+.def 	workMode 	= R19
+.def 	tmp_reg 	= R20
+.def	timer100Byte= R21
+.def 	timer010Byte= R22
+.def 	timer001Byte= R23
+.def	tmp_reg_24	= R24
+.def 	printByte 	= R26
+.def 	hbyteNum 	= R27
+.def 	lbyteNum 	= R28
+.def 	delay_reg 	= R29 ;; non use
 
-.org $000
-	jmp init
+
+.org $000					; Reset Interrupt ADDR
+	jmp init				; Reset Interrupt
+.org INT0addr				; Interrupt INT0 ADDR
+	jmp changeMode			; Interrupt INT0
 
 init:
-	ldi wreg, 0xFF;(1<<DDB3)|(1<<DDB2)|(1<<DDB4)|(1<<DDB0)
-	OUT  DDRB, wreg
-	ldi wreg, 0xFF;(1<<DDB3)|(1<<DDB2)|(1<<DDB4)|(1<<DDB0)
-	OUT  DDRD, wreg
-	ldi wreg, 0b00000011
-	OUT  DDRC, wreg
-	ldi wreg, 0b11100010
-	OUT  PORTB, wreg
-	ldi		wreg,low(RAMEND)             
-	out		SPL,wreg
+	LDI tmp_reg, 0xFF 		; Set B0-B5 (D8-D13) enable to write
+	OUT DDRB, tmp_reg		; Common cathode (D8, D11-D13)
+							; D9-D10 for PWM
+	LDI tmp_reg, 0xF0		; Set D4-D7 ports enable to write
+	OUT DDRD, tmp_reg		; high byte of 7-segment data
+	LDI tmp_reg, 0x0F		; Set A0-A3 ports enable to write
+	OUT DDRC, tmp_reg		; low  byte of 7-segment data
+	LDI tmp_reg, 0xC6		; Set 0b**000110 to B port. 11 for PWM 
+	OUT PORTB, tmp_reg		;
+	LDI	tmp_reg,low(RAMEND) ; Setup stack            
+	out	SPL,tmp_reg
+	LDI	tmp_reg,high(RAMEND)
+	out	SPH,tmp_reg
 
-	ldi		wreg,high(RAMEND)	; Stack Pointer = $45F
-	out		SPH,wreg
+	cli						; Stop interrupts
+	LDI tmp_reg, 0x83		; 0b10000011. Enable ADC, 011 - division by 8 (125 khz?)
+	STS ADCSRA, tmp_reg
+	LDI tmp_reg, 0x65		; 0b01100101. 01 - AVcc with external capacitor at AREF pin
+	STS ADMUX, tmp_reg		; 1 - ADC Left Adjust Result
+							; 0101 - ADC5 pin
+	rcall adc_convert		; read ADC
+    	
+	LDI tmp_reg, 0xA1		; 0b10100001, FAST PWM 8-bit
+	STS TCCR1A, tmp_reg		; Clear OC1A/OC1B on compare match, 
+							; set OC1A/OC1B at BOTTOM (non-inverting mode)
+	LDI tmp_reg, 0x09		; 0b00001001 No clock prescaling
+	STS TCCR1B, tmp_reg
 
-	cli							; ��������� ����������
-
-
-	ldi wreg, 0b10000011		; ���. ���, ������. ������., ���������� ���������, ��/8 (125 kHz)
-	STS ADCSRA, wreg
-
-	ldi wreg, 0b01100101		; AVcc, ����. ����. �� Aref, ������. �� ���. ����, channel 1.23V bg
-	STS ADMUX, wreg
-
-	rcall adc_convert
-
-    
-	ldi		wreg,0x00		
-	out		PORTB,wreg			; ������ 0 � ����
-	ldi		wreg,0xFF		; PortB.1 (OC1A) - Output
-	out		DDRB,wreg		
+	LDI tmp_reg, 0x00		; Set MCUCR (???)
+	OUT MCUCR, tmp_reg		;
+	LDI tmp_reg, 0x03		; Enable interrupts on INT0 and INT1
+	OUT EIMSK, tmp_reg		;
+	OUT EIFR, tmp_reg 		; Avoid interrupt on awake (SEI)
+	LDI tmp_reg, 0x0A		; 
+	STS EICRA, tmp_reg		; FALLEN to intr setup
 	
-	ldi wreg, 0b10000001		; �����. 8 ������ ���
-	STS TCCR1A, wreg
-
-	ldi wreg, 0b00001001		; CK/1
-	STS TCCR1B, wreg
-	SEI
-	LDI R19, 250
+	LDI workMode, 0 		; Set workMode to 0 by default
+	SEI 					; Start interrupts
+; 							; End init
 main:
-	CLR R24
-	CLR printByte
-	OUT PORTD, printByte
-	OUT PORTC, R24
+	LDI tmp_reg, 1			; if mode is 1
+	CP tmp_reg, workMode
+	BRNE work_mode			; goto WorkMode
+	jmp settings_mode		; else goto SettingsMode
 
-	; GET ADC
-	ldi wreg, 0b01100101		; ADC Channel 5 (PortC.5 ; pin 28)
-	rcall adc_convert
+changeMode:
+	PUSH tmp_reg			; Send tmp to Stack
 
-	
-	
-	; 1-s digit for PWM
-	ldi R30, 0b00000001;0b11111110
-	ldi wreg2, 0x00
-	OUT PORTD, wreg2
-	STS OCR1AH, wreg2
-	STS OCR1AL, wreg
+	inc workMode			; wm++
+	LDI tmp_reg, 0x02		; compare with 0x02
+	AND tmp_reg, workMode	; if second bit is down
+	BREQ changeMode_exit	; goto and
+	LDI tmp_reg, 0xFC		; else erase last 2 bits
+	AND workMode, tmp_reg
+changeMode_exit:
+	POP tmp_reg				; Read tmp from Stack
+	SEI						; Attach intr
+	jmp main				; goto main
+
+settings_mode:
+	LDI R30, 0b00111101;
 	OUT PORTB, R30
+	;LDI wreg2, 0xF0
+	MOV wreg, workMode
+	call movBytes ; set bytes
+	; hbyte
+	LDI R30, 0b00101000;0b11110101 ; 3-d digit
+	MOV printByte, hbyteNum
+	call printByte_func
+	CLR tmp_reg_24
+	BST printByte, 0
+	BLD tmp_reg_24, 0
+	BST printByte, 1
+	BLD tmp_reg_24, 1 
+	BST printByte, 2
+	BLD tmp_reg_24, 2
+	BST printByte, 3
+	BLD tmp_reg_24, 3 
+	OUT PORTB, R30
+	LDI tmp_reg, 0x0C
+	OR printByte, tmp_reg ; set interrupts on p3 and p2
+	OUT PORTD, printByte
+	OUT PORTC, tmp_reg_24
+	rcall delay_setup
+
+	; lbyte
+	LDI R30, 0b00110000;0b11101101 ; 4-d digit
+	MOV printByte, lbyteNum
+	call printByte_func
+	CLR tmp_reg_24
+	BST printByte, 0
+	BLD tmp_reg_24, 0
+	BST printByte, 1
+	BLD tmp_reg_24, 1 
+	BST printByte, 2
+	BLD tmp_reg_24, 2
+	BST printByte, 3
+	BLD tmp_reg_24, 3 
+	OUT PORTB, R30
+	LDI tmp_reg, 0x0C
+	OR printByte, tmp_reg ; set interrupts on p3 and p2
+	OUT PORTD, printByte
+	OUT PORTC, tmp_reg_24
+	rcall delay_setup
+	;call delay_setup
+rjmp main
+
+work_mode:
+	CLR R1						; Clear R1 (zero register)
+	LDI tmp_reg, 0x0C			; 
+	OUT PORTD, tmp_reg
+	OUT PORTC, R1
+
+	rcall adc_convert			; get ADC
+
+	; 1-s digit for PWM
+	CLR R1						; Clear R1 (zero register)
+	LDI tmp_reg, 0b00000111		; Open 1-d digit
+	OUT PORTB, tmp_reg			; 
+	LDI tmp_reg, 0x00			; 
+	OUT PORTD, R1			; 
+	STS OCR1AH, R1
+	STS OCR1AL, wreg
+	STS OCR1BH, R1
+	STS OCR1BL, wreg
+
 	rcall delay_setup
 	; Clear PWM
-	ldi wreg2, 0x00
-	STS OCR1AH, wreg2
-	STS OCR1AL, wreg2
+	;LDI wreg2, 0x00
+	;STS OCR1AH, wreg2
+	;STS OCR1AL, wreg2
 	; SEND adc to 2-d digit
-	ldi R30, 0b00000100;0b11111001
-	CLR R24
+	LDI R30, 0b00001000;0b11111001
+	CLR tmp_reg_24
 	BST wreg, 0
-	BLD R24, 0
+	BLD tmp_reg_24, 0
 	BST wreg, 1
-	BLD R24, 1 
+	BLD tmp_reg_24, 1 
+	BST wreg, 2
+	BLD tmp_reg_24, 2
+	BST wreg, 3
+	BLD tmp_reg_24, 3 
 	OUT PORTD, wreg
-	OUT PORTC, R24
+	OUT PORTC, tmp_reg_24
 	OUT PORTB, R30
 	rcall delay_setup
 
@@ -96,85 +177,94 @@ main:
 	call movBytes ; set bytes
 	
 	; hbyte
-	ldi R30, 0b00001000;0b11110101 ; 3-d digit
+	LDI R30, 0b00010000;0b11110101 ; 3-d digit
 	MOV printByte, hbyteNum
 	call printByte_func
-	CLR R24
+	CLR tmp_reg_24
 	BST printByte, 0
-	BLD R24, 0
+	BLD tmp_reg_24, 0
 	BST printByte, 1
-	BLD R24, 1 
+	BLD tmp_reg_24, 1 
+	BST printByte, 2
+	BLD tmp_reg_24, 2
+	BST printByte, 3
+	BLD tmp_reg_24, 3 
 	OUT PORTB, R30
+	LDI tmp_reg, 0x0C
+	OR printByte, tmp_reg ; set interrupts on p3 and p2
 	OUT PORTD, printByte
-	OUT PORTC, R24
+	OUT PORTC, tmp_reg_24
 	rcall delay_setup
 
 	; lbyte
-	ldi R30, 0b00010000;0b11101101 ; 4-d digit
+	LDI R30, 0b00100000;0b11101101 ; 4-d digit
 	MOV printByte, lbyteNum
 	call printByte_func
-	CLR R24
+	CLR tmp_reg_24
 	BST printByte, 0
-	BLD R24, 0
+	BLD tmp_reg_24, 0
 	BST printByte, 1
-	BLD R24, 1 
+	BLD tmp_reg_24, 1 
+	BST printByte, 2
+	BLD tmp_reg_24, 2
+	BST printByte, 3
+	BLD tmp_reg_24, 3 
 	OUT PORTB, R30
-	OUT PORTD, printByte
-	OUT PORTC, R24
+	LDI tmp_reg, 0x0C
+	OR printByte, tmp_reg ; set interrupts on p3 and p2	OUT PORTD, printByte
+	OUT PORTC, tmp_reg_24
 	rcall delay_setup
-
-
-
 rjmp main
 
 printByte_func:
-	ldi R22, 15
-	CP printByte, R22
+	PUSH tmp_reg
+	LDI tmp_reg, 15
+	CP printByte, tmp_reg
 	BRSH print_F
-	ldi R22, 14
-	CP printByte, R22
+	LDI tmp_reg, 14
+	CP printByte, tmp_reg
 	BRSH print_E
-	ldi R22, 13
-	CP printByte, R22
+	LDI tmp_reg, 13
+	CP printByte, tmp_reg
 	BRSH print_D
-	ldi R22, 12
-	CP printByte, R22
+	LDI tmp_reg, 12
+	CP printByte, tmp_reg
 	BRSH print_C
-	ldi R22, 11
-	CP printByte, R22
+	LDI tmp_reg, 11
+	CP printByte, tmp_reg
 	BRSH print_B
-	ldi R22, 10
-	CP printByte, R22
+	LDI tmp_reg, 10
+	CP printByte, tmp_reg
 	BRSH print_A
-	ldi R22, 9
-	CP printByte, R22
+	LDI tmp_reg, 9
+	CP printByte, tmp_reg
 	BRSH print_9
-	ldi R22, 8
-	CP printByte, R22
+	LDI tmp_reg, 8
+	CP printByte, tmp_reg
 	BRSH print_8
-	ldi R22, 7
-	CP printByte, R22
+	LDI tmp_reg, 7
+	CP printByte, tmp_reg
 	BRSH print_7
-	ldi R22, 6
-	CP printByte, R22
+	LDI tmp_reg, 6
+	CP printByte, tmp_reg
 	BRSH print_6
-	ldi R22, 5
-	CP printByte, R22
+	LDI tmp_reg, 5
+	CP printByte, tmp_reg
 	BRSH print_5
-	ldi R22, 4
-	CP printByte, R22
+	LDI tmp_reg, 4
+	CP printByte, tmp_reg
 	BRSH print_4
-	ldi R22, 3
-	CP printByte, R22
+	LDI tmp_reg, 3
+	CP printByte, tmp_reg
 	BRSH print_3
-	ldi R22, 2
-	CP printByte, R22
+	LDI tmp_reg, 2
+	CP printByte, tmp_reg
 	BRSH print_2
-	ldi R22, 1
-	CP printByte, R22
+	LDI tmp_reg, 1
+	CP printByte, tmp_reg
 	BRSH print_1
-	ldi R22, 0
-	CP printByte, R22
+	LDI tmp_reg, 0
+	CP printByte, tmp_reg
 	BRSH print_0
 print_F:
 	LDI printByte, 0xE2
@@ -225,7 +315,9 @@ print_0:
 	LDI printByte, 0x7E
 	RJMP label_ret
 label_ret:
+	POP tmp_reg
 	RET
+
 
 movBytes:
 	CLR lbyteNum
@@ -247,36 +339,36 @@ movBytes:
 	RET
    
 delay_setup:
-   CLR R21
-   CLR R22
-   CLR R23
+   CLR timer100Byte
+   CLR timer010Byte
+   CLR timer001Byte
    CLR tmp_reg
-   LDI R21, 0 ; here is the hihest byte
-   LDI R22, 1
-   ;LDI R17, 250 ; here is the lowest byte
-   LSL R21
-   BST R22, 7
-   BLD R21, 0
-   LSL R22
-   LSL R21
-   BST R22, 7
-   BLD R21, 0
-   LSL R22
-delay_cycle:
-   SUBI R23, 1 ; 1 tick
-   SBCI R22, 0 ; 1 tick
-   SBCI R21, 0 ; 1 tick
+   LDI timer100Byte, 0 			; here is the hihest byte
+   LDI timer010Byte, 1 			; here is the lowest byte
 
-   CPSE R21, tmp_reg ; 1 ticks, if equal then skip (2 ticks)
-   RJMP wait_nop_8 ; 2 ticks
-   CPSE R22, tmp_reg ; 1 ticks, if equal then skip (2 ticks)
-   RJMP wait_nop_5 ; 2 ticks
-   CPSE R23, tmp_reg ; 1 ticks, if equal then skip (2 ticks)
-   RJMP wait_nop_2 ; 2 ticks
+   LSL timer100Byte				; << 2 left to have 10 clear bits at right
+   BST timer010Byte, 7			; 14 left to set time
+   BLD timer100Byte, 0			; 
+   LSL timer010Byte
+   LSL timer100Byte
+   BST timer010Byte, 7
+   BLD timer100Byte, 0
+   LSL timer010Byte
+delay_cycle:
+   SUBI timer001Byte, 1 		; 1 tick
+   SBCI timer010Byte, 0 		; 1 tick
+   SBCI timer100Byte, 0 		; 1 tick
+
+   CPSE timer100Byte, tmp_reg 	; 1 ticks, if equal then skip (2 ticks)
+   RJMP wait_nop_8 				; 2 ticks
+   CPSE timer010Byte, tmp_reg 	; 1 ticks, if equal then skip (2 ticks)
+   RJMP wait_nop_5 				; 2 ticks
+   CPSE timer001Byte, tmp_reg 	; 1 ticks, if equal then skip (2 ticks)
+   RJMP wait_nop_2 				; 2 ticks
    NOP
    NOP
    NOP
-   RET                        ; go back, 4 ticks
+   RET                        	; go back, 4 ticks
 wait_nop_8:
    NOP
    NOP
@@ -292,34 +384,25 @@ wait_nop_2:
    
 
 adc_convert:
-
-	STS ADMUX, wreg				; wreg contains channel
-	LDS R25, ADCSRA
-   OUT PORTD, R25
+	LDI wreg, 0b01100101	; ADC Channel 5 (PortC.5 ; pin 28)
+	STS ADMUX, wreg			; wreg contains channel
+	LDS R25, ADCSRA			; 
+	OUT PORTD, R25
 	sbi PORTD, ADSC
-   IN R25, PORTD
-   STS ADCSRA, R25
+   	IN R25, PORTD
+   	STS ADCSRA, R25
 cycle_adc:
-   LDS R25, ADCSRA
-   OUT PORTD, R25
+   	LDS R25, ADCSRA
+   	OUT PORTD, R25
 	sbic PORTD , ADSC
 	rjmp cycle_adc
-   IN R25, PORTD
-   STS ADCSRA, R25
-
-
-   LDS wreg, ADCL				; ������ ������������ (������ ������ �������� ADCL)
-	;OUT PORTD, wreg
-   ;ldi wreg, 250				; 25mS
-	;rcall delay
-   LDS wreg, ADCH				; wreg contains result
-   ;OUT PORTD, wreg
-   ;ldi wreg, 250		case 0:
-    ;out  PORTB,  0b11111110;
-     ; break; 	; 25mS
-	;rcall delay
-
+   	IN R25, PORTD
+   	STS ADCSRA, R25
+	LDS wreg, ADCL
+   	LDS wreg, ADCH
 ret
 
+clear_output:
 
+ret
 

@@ -22,11 +22,11 @@
 
 
 .org $000					; Reset Interrupt ADDR
-	jmp init				; Reset Interrupt
+	RJMP init				; Reset Interrupt
 .org INT0addr				; Interrupt INT0 ADDR
-	jmp changeWorkMode		; Interrupt INT0
+	RJMP changeWorkMode		; Interrupt INT0
 .org INT1addr				; Interrupt INT1 ADDR
-	jmp changeSettMode		; Interrupt INT1
+	RJMP changeSettMode		; Interrupt INT1
 
 init:
 	LDI tmp_reg, 0xFF 		; Set B0-B5 (D8-D13) enable to write
@@ -61,6 +61,17 @@ init:
 	CLR pwm_reg_2			; pwm
 	CLR pwmOutReg			; regs
 
+; в регистре MCUCR для ATmega328P на самом деле находятся следующие биты:
+; IVSEL: Выбор вектора прерывания. Если этот бит установлен, вектор прерывания будет расположен на старшем адресе Flash, 
+; если сброшен - на начальном адресе Flash.
+; IVCE: Разрешение доступа к IVSEL. Если этот бит установлен, доступ к IVSEL разрешен.
+; BODS: Управление функцией Brown-out Detection (BOD) - выбор источника опорного напряжения для BOD.
+; BODSE: Разрешение изменения значения BODS. Если этот бит установлен вместе с BODS, то значение BODS может быть изменено.
+; PUD: Управление внутренним подтягивающим резистором для пинов ввода/вывода порта B.
+; Таким образом, регистр MCUCR в контексте прерываний на микроконтроллере ATmega328P отвечает за выбор вектора прерывания, 
+; настройку функции BOD, а также за управление подтягивающими резисторами для пинов ввода/вывода порта B. 
+; Он не отвечает за настройку внешних или внутренних прерываний, как было указано ранее. 
+
 	LDI tmp_reg, 0x00		; Set MCUCR (???)
 	OUT MCUCR, tmp_reg		;
 	LDI tmp_reg, 0x03		; Enable interrupts on INT0 and INT1
@@ -76,7 +87,7 @@ main:
 	LDI tmp_reg, 1			; if mode is 1
 	AND tmp_reg, workModeReg
 	BREQ work_mode			; goto WorkMode
-	jmp settings_mode		; else goto SettingsMode
+	RJMP settings_mode		; else goto SettingsMode
 
 work_mode:
 	CLR R1						; Clear R1 (zero register)
@@ -116,7 +127,7 @@ work_mode:
 	RCALL pushByte				; push  -
 	RCALL delay_setup			; delay
 
-rjmp main
+RJMP main
 
 settings_mode:
 	CLR R1						; Clear R1 (zero register)
@@ -162,7 +173,7 @@ mode_1:
 	LDI printByte, 19			; print 1.
 	RCALL pushByte				; push  1.
 	RCALL delay_setup			; delay
-	rjmp mode_12_end
+	RJMP mode_12_end
 	
 mode_2:
 	RCALL adc_convert			; get ADC
@@ -205,7 +216,7 @@ mode_12_end:
 	MOV printByte, tmp_reg		; print digit
 	RCALL pushByte				; push  digit
 	RCALL delay_setup			; delay
-	rjmp main
+	RJMP main
 mode_3:
 	RCALL adc_convert			; get ADC
 
@@ -250,7 +261,7 @@ mode_3:
 	LSR pwmOutReg
 	LSR pwmOutReg
 
-	rjmp main
+	RJMP main
 
 pushByte:
 	RCALL printByte_func 		; convert print
@@ -269,21 +280,20 @@ pushByte:
 	POP tmp_reg					; load SREG
 	STS SREG, tmp_reg			; from stack
 	POP tmp_reg					; load tmp from stack
-ret
+RET
 
 changeWorkMode:
 	PUSH tmp_reg			; Send tmp to Stack
-
 	inc workModeReg			; wm++
 	LDI tmp_reg, 0x02		; compare with 0b00000010
-	AND tmp_reg, workModeReg	; if second bit is down
+	AND tmp_reg, workModeReg; if second bit is down
 	BREQ changeWorkMode_exit; goto and
 	LDI tmp_reg, 0xFC		; else erase last 2 bits
 	AND workModeReg, tmp_reg
 changeWorkMode_exit:
 	POP tmp_reg				; Read tmp from Stack
 	SEI						; Attach intr
-	jmp main				; goto main
+RJMP main					; goto main
 
 changeSettMode:
 	PUSH tmp_reg			; Send tmp to Stack
@@ -298,7 +308,7 @@ changeSettMode:
 changeSettMode_exit:
 	POP tmp_reg				; Read tmp from Stack
 	SEI						; Attach intr
-	jmp main				; goto main
+RJMP main					; goto main
 
 printByte_func:				; many IFs, no to comment
 	PUSH tmp_reg
@@ -436,7 +446,7 @@ print_0:
 	RJMP label_ret
 label_ret:
 	POP tmp_reg
-	RET
+RET
    
 delay_setup:
    CLR timer100Byte
@@ -455,20 +465,20 @@ delay_setup:
    BLD timer100Byte, 0
    LSL timer010Byte
 delay_cycle:
-   SUBI timer001Byte, 1 		; 1 tick
-   SBCI timer010Byte, 0 		; 1 tick
-   SBCI timer100Byte, 0 		; 1 tick
+   SUBI timer001Byte, 1 	; 1 tick
+   SBCI timer010Byte, 0 	; 1 tick
+   SBCI timer100Byte, 0 	; 1 tick
 
    CPSE timer100Byte, R1 	; 1 ticks, if equal then skip (2 ticks)
-   RJMP wait_nop_8 				; 2 ticks
+   RJMP wait_nop_8 			; 2 ticks
    CPSE timer010Byte, R1 	; 1 ticks, if equal then skip (2 ticks)
-   RJMP wait_nop_5 				; 2 ticks
+   RJMP wait_nop_5 			; 2 ticks
    CPSE timer001Byte, R1 	; 1 ticks, if equal then skip (2 ticks)
-   RJMP wait_nop_2 				; 2 ticks
+   RJMP wait_nop_2 			; 2 ticks
    NOP
    NOP
    NOP
-   RET                        	; go back, 4 ticks
+RET                        	; go back, 4 ticks
 wait_nop_8:
    NOP
    NOP
@@ -480,7 +490,7 @@ wait_nop_5:
 wait_nop_2:
    NOP
    NOP
-   RJMP   delay_cycle
+RJMP   delay_cycle
    
 
 adc_convert:
@@ -494,10 +504,10 @@ adc_convert:
 cycle_adc:						; while converting
    	LDS R25, ADCSRA				; same bit checking
    	OUT PORTD, convertReg
-	sbic PORTD , ADSC
-	rjmp cycle_adc
+	SBIC PORTD, ADSC
+	RJMP cycle_adc
    	IN convertReg, PORTD		; set bit
    	STS ADCSRA, convertReg
 	LDS adc_res, ADCL			; get value (ignore high byte)
    	LDS adc_res, ADCH
-ret
+RET

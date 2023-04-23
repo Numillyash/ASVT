@@ -41,16 +41,16 @@ void writeByte(int razr, int num, bool printReg)
   switch(razr)
   {
     case 0:
-      PORTB = 0b11111100;
+      PORTB = 0b00000001;
       break; 
     case 1:
-      PORTB = 0b11111001;
+      PORTB = 0b00000100;
       break; 
     case 2:
-      PORTB = 0b11110101;
+      PORTB = 0b00001000;
       break; 
     case 3:
-      PORTB = 0b11101101;
+      PORTB = 0b00010000;
       break; 
     default:
       break;

@@ -60,7 +60,7 @@ init:
 	CLI						; Stop interrupts
 	LDI tmp_reg, 0xEF		; 0b10000011. Enable ADC, 011 - division by 8 (125 khz?)
 	STS ADCSRA, tmp_reg
-	LDI tmp_reg, 0x00		; 0b00001000. Select ADC5 as interrupt source
+	LDI tmp_reg, 0x00		; 
 	STS ADCSRB, tmp_reg		; Set ADC5 as interrupt source
 	LDI tmp_reg, 0x65		; 0b01100101. 01 - AVcc with external capacitor at AREF pin
 	STS ADMUX, tmp_reg		; 1 - ADC Left Adjust Result
@@ -157,25 +157,31 @@ settings_mode:
 
 	LDI tmp_reg, 9				; 0b****1001
 	CP workModeReg, tmp_reg
-	BRSH mode_3
+	BRSH mode_2
 	LDI tmp_reg, 8				; 0b****1000
 	CP workModeReg, tmp_reg
-	BRSH mode_3
+	BRSH mode_2
 	LDI tmp_reg, 5				; 0b****0101
 	CP workModeReg, tmp_reg
-	BRSH mode_2
+	BRSH mode_1
 	LDI tmp_reg, 4				; 0b****0100
 	CP workModeReg, tmp_reg
-	BRSH mode_2
+	BRSH mode_1
 	LDI tmp_reg, 1				; 0b****0001
 	CP workModeReg, tmp_reg
-	BRSH mode_1
+	BRSH mode_3
 	LDI tmp_reg, 0				; 0b****0000
 	CP workModeReg, tmp_reg
-	BRSH mode_1
+	BRSH mode_3
 mode_1:
 	;RCALL adc_convert			; get ADC
 	MOV pwm_reg_1, adc_res
+
+	;MOV tmp_reg, adc_res
+	;STS OCR1AL, tmp_reg		; push D10 pwm
+	;LDI tmp_reg, 0xFF
+	;EOR tmp_reg, adc_res
+	;STS OCR1BL, tmp_reg		; push D11 pwm
 
 	; 1-s digit for PWM
 	LDI PORTB_out, 0b00000111	; Open 1-d digit
@@ -194,7 +200,12 @@ mode_1:
 mode_2:
 	;RCALL adc_convert			; get ADC
 	MOV pwm_reg_2, adc_res
-
+	
+	;MOV tmp_reg, adc_res
+	;STS OCR1AL, tmp_reg		; push D10 pwm
+	;LDI tmp_reg, 0xFF
+	;EOR tmp_reg, adc_res
+	;STS OCR1BL, tmp_reg		; push D11 pwm
 	; 1-s digit for PWM
 	LDI PORTB_out, 0b00000001	; Open 1-d digit
 	OUT PORTB, PORTB_out		; 
@@ -235,6 +246,11 @@ mode_12_end:
 	RJMP main
 mode_3:
 	;RCALL adc_convert			; get ADC
+	;MOV tmp_reg, adc_res
+	;STS OCR1AL, tmp_reg		; push D10 pwm
+	;LDI tmp_reg, 0xFF
+	;EOR tmp_reg, adc_res
+	;STS OCR1BL, tmp_reg		; push D11 pwm
 
 	; 1-s digit for PWM
 	LDI PORTB_out, 0b00000001	; Open 1-d digit

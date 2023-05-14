@@ -3,7 +3,7 @@ gavrasm Gerd's AVR assembler version 5.4 (C)2022 by DG4FAC
 Source file: ADC_intr.asm
 Hex file:    ADC_intr.hex
 Eeprom file: ADC_intr.eep
-Compiled:    23.04.2023, 23:24:23
+Compiled:    24.04.2023, 13:49:40
 Pass:        2
      1: ;
      2: ; AssemblerApplication1.asm
@@ -39,505 +39,520 @@ Pass:        2
     32: 
     33: .org 0x0033
     34: ADC_interrupt:
-    35: 000033   930F  PUSH tmp_reg
-    36: 000034   9100  LDS tmp_reg, SREG			; Save SREG 
+    35: 000033   930F  PUSH tmp_reg			; Save tmp to stack
+    36: 000034   9100  LDS tmp_reg, SREG		; Save SREG 
         000035   003F
-    37: 000036   930F  PUSH tmp_reg				; to stack
+    37: 000036   930F  PUSH tmp_reg			; to stack
     38: 000037   91D0  LDS adc_res, ADCL		; get value (ignore high byte)
         000038   0078
     39: 000039   91D0  LDS adc_res, ADCH		; Save ADC result in R16
         00003A   0079
-    40: 00003B   910F  POP tmp_reg					; load SREG
-    41: 00003C   9300  STS SREG, tmp_reg			; from stack
+    40: 00003B   910F  POP tmp_reg				; load SREG
+    41: 00003C   9300  STS SREG, tmp_reg		; from stack
         00003D   003F
-    42: 00003E   910F  POP tmp_reg					; load tmp from stack
-    43: 	;call delay_setup
-    44: 00003F   9518  RETI	            		; Return from interrupt
-    45: 
-    46: init:
-    47: 000040   EF0F  LDI tmp_reg, 0xFF 		; Set B0-B5 (D8-D13) enable to write
-    48: 000041   B904  OUT DDRB, tmp_reg		; Common cathode (D8, D11-D13)
-    49: 							; D9-D10 for PWM
-    50: 000042   EF00  LDI tmp_reg, 0xF0		; Set D4-D7 ports enable to write
-    51: 000043   B90A  OUT DDRD, tmp_reg		; high byte of 7-segment data
-    52: 000044   E00F  LDI tmp_reg, 0x0F		; Set A0-A3 ports enable to write
-    53: 000045   B907  OUT DDRC, tmp_reg		; low  byte of 7-segment data
-    54: 000046   EC06  LDI tmp_reg, 0xC6		; Set 0b**000110 to B port. 11 for PWM 
-    55: 000047   B905  OUT PORTB, tmp_reg		;
-    56: 000048   EF0F  LDI	tmp_reg,low(RAMEND) ; Setup stack            
-    57: 000049   BF0D  out	SPL,tmp_reg
-    58: 00004A   E008  LDI	tmp_reg,high(RAMEND)
-    59: 00004B   BF0E  out	SPH,tmp_reg
-    60: 
-    61: 00004C   94F8  CLI						; Stop interrupts
-    62: 00004D   EE0F  LDI tmp_reg, 0xEF		; 0b10000011. Enable ADC, 011 - division by 8 (125 khz?)
-    63: 00004E   9300  STS ADCSRA, tmp_reg
+    42: 00003E   910F  POP tmp_reg				; load tmp from stack
+    43: 00003F   9518  RETI	            		; Return from interrupt
+    44: 
+    45: init:
+    46: 000040   EF0F  LDI tmp_reg, 0xFF 		; Set B0-B5 (D8-D13) enable to write
+    47: 000041   B904  OUT DDRB, tmp_reg		; Common cathode (D8, D11-D13)
+    48: 							; D9-D10 for PWM
+    49: 000042   EF00  LDI tmp_reg, 0xF0		; Set D4-D7 ports enable to write
+    50: 000043   B90A  OUT DDRD, tmp_reg		; high byte of 7-segment data
+    51: 000044   E00F  LDI tmp_reg, 0x0F		; Set A0-A3 ports enable to write
+    52: 000045   B907  OUT DDRC, tmp_reg		; low  byte of 7-segment data
+    53: 000046   EC06  LDI tmp_reg, 0xC6		; Set 0b**000110 to B port. 11 for PWM 
+    54: 000047   B905  OUT PORTB, tmp_reg		;
+    55: 000048   EF0F  LDI	tmp_reg,low(RAMEND) ; Setup stack            
+    56: 000049   BF0D  out	SPL,tmp_reg
+    57: 00004A   E008  LDI	tmp_reg,high(RAMEND)
+    58: 00004B   BF0E  out	SPH,tmp_reg
+    59: 
+    60: 00004C   94F8  CLI						; Stop interrupts
+    61: 00004D   EE0F  LDI tmp_reg, 0xEF		; 0b10000011. Enable ADC, 011 - division by 8 (125 khz?)
+    62: 00004E   9300  STS ADCSRA, tmp_reg
         00004F   007A
-    64: 000050   E000  LDI tmp_reg, 0x00		; 0b00001000. Select ADC5 as interrupt source
-    65: 000051   9300  STS ADCSRB, tmp_reg		; Set ADC5 as interrupt source
+    63: 000050   E000  LDI tmp_reg, 0x00		; 0b00001000. Select ADC5 as interrupt source
+    64: 000051   9300  STS ADCSRB, tmp_reg		; Set ADC5 as interrupt source
         000052   007B
-    66: 000053   E605  LDI tmp_reg, 0x65		; 0b01100101. 01 - AVcc with external capacitor at AREF pin
-    67: 000054   9300  STS ADMUX, tmp_reg		; 1 - ADC Left Adjust Result
+    65: 000053   E605  LDI tmp_reg, 0x65		; 0b01100101. 01 - AVcc with external capacitor at AREF pin
+    66: 000054   9300  STS ADMUX, tmp_reg		; 1 - ADC Left Adjust Result
         000055   007C
-    68: 							; 0101 - ADC5 pin
-    69: 	;RCALL adc_convert		; read ADC
-    70:     	
-    71: 000056   EA01  LDI tmp_reg, 0xA1		; 0b10100001, FAST PWM 8-bit
-    72: 000057   9300  STS TCCR1A, tmp_reg		; Clear OC1A/OC1B on compare match, 
+    67: 							; 0101 - ADC5 pin
+    68: 	;RCALL adc_convert		; read ADC
+    69:     	
+    70: 000056   EA01  LDI tmp_reg, 0xA1		; 0b10100001, FAST PWM 8-bit
+    71: 000057   9300  STS TCCR1A, tmp_reg		; Clear OC1A/OC1B on compare match, 
         000058   0080
-    73: 							; set OC1A/OC1B at BOTTOM (non-inverting mode)
-    74: 000059   E009  LDI tmp_reg, 0x09		; 0b00001001 No clock prescaling
-    75: 00005A   9300  STS TCCR1B, tmp_reg
+    72: 							; set OC1A/OC1B at BOTTOM (non-inverting mode)
+    73: 000059   E009  LDI tmp_reg, 0x09		; 0b00001001 No clock prescaling
+    74: 00005A   9300  STS TCCR1B, tmp_reg
         00005B   0081
-    76: 
-    77: 00005C   27BB  CLR pwm_reg_1			; clear 
-    78: 00005D   27CC  CLR pwm_reg_2			; pwm
-    79: 00005E   27AA  CLR pwmOutReg			; regs
-    80: 
-    81: ; в регистре MCUCR для ATmega328P на самом деле находятся следующие биты:
-    82: ; IVSEL: Выбор вектора прерывания. Если этот бит установлен, вектор прерывания будет расположен на старшем адресе Flash, 
-    83: ; если сброшен - на начальном адресе Flash.
-    84: ; IVCE: Разрешение доступа к IVSEL. Если этот бит установлен, доступ к IVSEL разрешен.
-    85: ; BODS: Управление функцией Brown-out Detection (BOD) - выбор источника опорного напряжения для BOD.
-    86: ; BODSE: Разрешение изменения значения BODS. Если этот бит установлен вместе с BODS, то значение BODS может быть изменено.
-    87: ; PUD: Управление внутренним подтягивающим резистором для пинов ввода/вывода порта B.
-    88: ; Таким образом, регистр MCUCR в контексте прерываний на микроконтроллере ATmega328P отвечает за выбор вектора прерывания, 
-    89: ; настройку функции BOD, а также за управление подтягивающими резисторами для пинов ввода/вывода порта B. 
-    90: ; Он не отвечает за настройку внешних или внутренних прерываний, как было указано ранее. 
-    91: 
-    92: 00005F   E000  LDI tmp_reg, 0x00		; Set MCUCR (???)
-    93: 000060   BF05  OUT MCUCR, tmp_reg		;
-    94: 000061   E003  LDI tmp_reg, 0x03		; Enable interrupts on INT0 and INT1
-    95: 000062   BB0D  OUT EIMSK, tmp_reg		;
-    96: 000063   BB0C  OUT EIFR, tmp_reg 		; Avoid interrupt on awake (SEI)
-    97: 000064   E00A  LDI tmp_reg, 0x0A		; 
-    98: 000065   9300  STS EICRA, tmp_reg		; FALLEN to intr setup
+    75: 
+    76: 00005C   27BB  CLR pwm_reg_1			; clear 
+    77: 00005D   27CC  CLR pwm_reg_2			; pwm
+    78: 00005E   27AA  CLR pwmOutReg			; regs
+    79: 
+    80: ; в регистре MCUCR для ATmega328P на самом деле находятся следующие биты:
+    81: ; IVSEL: Выбор вектора прерывания. Если этот бит установлен, вектор прерывания будет расположен на старшем адресе Flash, 
+    82: ; если сброшен - на начальном адресе Flash.
+    83: ; IVCE: Разрешение доступа к IVSEL. Если этот бит установлен, доступ к IVSEL разрешен.
+    84: ; BODS: Управление функцией Brown-out Detection (BOD) - выбор источника опорного напряжения для BOD.
+    85: ; BODSE: Разрешение изменения значения BODS. Если этот бит установлен вместе с BODS, то значение BODS может быть изменено.
+    86: ; PUD: Управление внутренним подтягивающим резистором для пинов ввода/вывода порта B.
+    87: ; Таким образом, регистр MCUCR в контексте прерываний на микроконтроллере ATmega328P отвечает за выбор вектора прерывания, 
+    88: ; настройку функции BOD, а также за управление подтягивающими резисторами для пинов ввода/вывода порта B. 
+    89: ; Он не отвечает за настройку внешних или внутренних прерываний, как было указано ранее. 
+    90: 
+    91: 00005F   E000  LDI tmp_reg, 0x00		; Set MCUCR (???)
+    92: 000060   BF05  OUT MCUCR, tmp_reg		;
+    93: 000061   E003  LDI tmp_reg, 0x03		; Enable interrupts on INT0 and INT1
+    94: 000062   BB0D  OUT EIMSK, tmp_reg		;
+    95: 000063   BB0C  OUT EIFR, tmp_reg 		; Avoid interrupt on awake (SEI)
+    96: 000064   E00A  LDI tmp_reg, 0x0A		; 
+    97: 000065   9300  STS EICRA, tmp_reg		; FALLEN to intr setup
         000066   0069
-    99: 	
-   100: 000067   E040  LDI workModeReg, 0 		; Set workModeReg to 0 by default
-   101: 000068   9478  SEI 					; Start interrupts
-   102: ; 							; End init
-   103: main:
-   104: 000069   E001  LDI tmp_reg, 1			; if mode is 1
-   105: 00006A   2304  AND tmp_reg, workModeReg
-   106: 00006B   F009  BREQ work_mode			; goto WorkMode
-   107: 00006C   C024  RJMP settings_mode		; else goto SettingsMode
-   108: 
-   109: work_mode:
-   110: 00006D   2411  CLR R1						; Clear R1 (zero register)
-   111: 
-   112: 00006E   9210  STS OCR1AH, R1				; clear high D10
+    98: 	
+    99: 000067   E040  LDI workModeReg, 0 		; Set workModeReg to 0 by default
+   100: 000068   9478  SEI 					; Start interrupts
+   101: ; 							; End init
+   102: main:
+   103: 000069   E001  LDI tmp_reg, 1			; if mode is 1
+   104: 00006A   2304  AND tmp_reg, workModeReg
+   105: 00006B   F009  BREQ work_mode			; goto WorkMode
+   106: 00006C   C024  RJMP settings_mode		; else goto SettingsMode
+   107: 
+   108: work_mode:
+   109: 00006D   2411  CLR R1						; Clear R1 (zero register)
+   110: 
+   111: 00006E   9210  STS OCR1AH, R1				; clear high D10
         00006F   0089
-   113: 000070   9210  STS OCR1AL, R1				; clear low  D10
+   112: 000070   9210  STS OCR1AL, R1				; clear low  D10
         000071   0088
-   114: 000072   FDA0  SBRC pwmOutReg, 0
-   115: 000073   93B0  STS OCR1AL, pwm_reg_1		; push D10 pwm
+   113: 000072   FDA0  SBRC pwmOutReg, 0
+   114: 000073   93B0  STS OCR1AL, pwm_reg_1		; push D10 pwm
         000074   0088
-   116: 	
-   117: 000075   9210  STS OCR1BH, R1				; clear high D11
+   115: 	
+   116: 000075   9210  STS OCR1BH, R1				; clear high D11
         000076   008B
-   118: 000077   9210  STS OCR1BL, R1				; clear low  D11
+   117: 000077   9210  STS OCR1BL, R1				; clear low  D11
         000078   008A
-   119: 000079   FDA1  SBRC pwmOutReg, 1
-   120: 00007A   93C0  STS OCR1BL, pwm_reg_2		; push D11 pwm
+   118: 000079   FDA1  SBRC pwmOutReg, 1
+   119: 00007A   93C0  STS OCR1BL, pwm_reg_2		; push D11 pwm
         00007B   008A
-   121: 
-   122: 	; 1-s digit for PWM
-   123: 00007C   E017  LDI PORTB_out, 0b00000111	; Open 1-d digit
-   124: 00007D   B915  OUT PORTB, PORTB_out		; 
-   125: 00007E   E182  LDI printByte, 18			; print -
-   126: 00007F   D079  RCALL pushByte				; push  -
-   127: 000080   D111  RCALL delay_setup			; delay
-   128: 	; 2-d digit for PWM
-   129: 000081   E01E  LDI PORTB_out, 0b00001110	; Open 2-d digit
-   130: 000082   B915  OUT PORTB, PORTB_out		; 
-   131: 000083   E180  LDI printByte, 16			; print O
-   132: 000084   D074  RCALL pushByte				; push  O
-   133: 000085   D10C  RCALL delay_setup			; delay
-   134: 	; 3-d digit for PWM
-   135: 000086   E116  LDI PORTB_out, 0b00010110	; Open 3-d digit
-   136: 000087   B915  OUT PORTB, PORTB_out		; 
-   137: 000088   E181  LDI printByte, 17			; print N
-   138: 000089   D06F  RCALL pushByte				; push  N
-   139: 00008A   D107  RCALL delay_setup			; delay
-   140: 	; 4-d digit for PWM
-   141: 00008B   E216  LDI PORTB_out, 0b00100110	; Open 4-d digit
-   142: 00008C   B915  OUT PORTB, PORTB_out		; 
-   143: 00008D   E182  LDI printByte, 18			; print -
-   144: 00008E   D06A  RCALL pushByte				; push  -
-   145: 00008F   D102  RCALL delay_setup			; delay
-   146: 
-   147: 000090   CFD8  RJMP main
-   148: 
-   149: settings_mode:
-   150: 000091   2411  CLR R1						; Clear R1 (zero register)
-   151: 000092   9210  STS OCR1AH, R1				; clear D10
+   120: 
+   121: 	; 1-s digit for PWM
+   122: 00007C   E017  LDI PORTB_out, 0b00000111	; Open 1-d digit
+   123: 00007D   B915  OUT PORTB, PORTB_out		; 
+   124: 00007E   E182  LDI printByte, 18			; print -
+   125: 00007F   D079  RCALL pushByte				; push  -
+   126: 000080   D111  RCALL delay_setup			; delay
+   127: 	; 2-d digit for PWM
+   128: 000081   E01E  LDI PORTB_out, 0b00001110	; Open 2-d digit
+   129: 000082   B915  OUT PORTB, PORTB_out		; 
+   130: 000083   E180  LDI printByte, 16			; print O
+   131: 000084   D074  RCALL pushByte				; push  O
+   132: 000085   D10C  RCALL delay_setup			; delay
+   133: 	; 3-d digit for PWM
+   134: 000086   E116  LDI PORTB_out, 0b00010110	; Open 3-d digit
+   135: 000087   B915  OUT PORTB, PORTB_out		; 
+   136: 000088   E181  LDI printByte, 17			; print N
+   137: 000089   D06F  RCALL pushByte				; push  N
+   138: 00008A   D107  RCALL delay_setup			; delay
+   139: 	; 4-d digit for PWM
+   140: 00008B   E216  LDI PORTB_out, 0b00100110	; Open 4-d digit
+   141: 00008C   B915  OUT PORTB, PORTB_out		; 
+   142: 00008D   E182  LDI printByte, 18			; print -
+   143: 00008E   D06A  RCALL pushByte				; push  -
+   144: 00008F   D102  RCALL delay_setup			; delay
+   145: 
+   146: 000090   CFD8  RJMP main
+   147: 
+   148: settings_mode:
+   149: 000091   2411  CLR R1						; Clear R1 (zero register)
+   150: 000092   9210  STS OCR1AH, R1				; clear D10
         000093   0089
-   152: 000094   9210  STS OCR1AL, R1				; 
+   151: 000094   9210  STS OCR1AL, R1				; 
         000095   0088
-   153: 000096   9210  STS OCR1BH, R1				; clear D11
+   152: 000096   9210  STS OCR1BH, R1				; clear D11
         000097   008B
-   154: 000098   9210  STS OCR1BL, R1				; 
+   153: 000098   9210  STS OCR1BL, R1				; 
         000099   008A
-   155: 00009A   B818  OUT PORTC, R1				; clear C
-   156: 00009B   E00F  LDI tmp_reg, 0x0F			; clear D
-   157: 00009C   B90B  OUT PORTD, tmp_reg			; (without intr)
-   158: 
-   159: 00009D   E009  LDI tmp_reg, 9				; 0b****1001
-   160: 00009E   1740  CP workModeReg, tmp_reg
-   161: 00009F   F5C8  BRSH mode_3
-   162: 0000A0   E008  LDI tmp_reg, 8				; 0b****1000
-   163: 0000A1   1740  CP workModeReg, tmp_reg
-   164: 0000A2   F5B0  BRSH mode_3
-   165: 0000A3   E005  LDI tmp_reg, 5				; 0b****0101
-   166: 0000A4   1740  CP workModeReg, tmp_reg
-   167: 0000A5   F4A8  BRSH mode_2
-   168: 0000A6   E004  LDI tmp_reg, 4				; 0b****0100
-   169: 0000A7   1740  CP workModeReg, tmp_reg
-   170: 0000A8   F490  BRSH mode_2
-   171: 0000A9   E001  LDI tmp_reg, 1				; 0b****0001
-   172: 0000AA   1740  CP workModeReg, tmp_reg
-   173: 0000AB   F418  BRSH mode_1
-   174: 0000AC   E000  LDI tmp_reg, 0				; 0b****0000
-   175: 0000AD   1740  CP workModeReg, tmp_reg
-   176: 0000AE   F400  BRSH mode_1
-   177: mode_1:
-   178: 	;RCALL adc_convert			; get ADC
-   179: 0000AF   2FBD  MOV pwm_reg_1, adc_res
-   180: 
-   181: 	; 1-s digit for PWM
-   182: 0000B0   E017  LDI PORTB_out, 0b00000111	; Open 1-d digit
-   183: 0000B1   B915  OUT PORTB, PORTB_out		; 
-   184: 0000B2   E08D  LDI printByte, 13			; print d
-   185: 0000B3   D045  RCALL pushByte				; push  d
-   186: 0000B4   D0DD  RCALL delay_setup			; delay
-   187: 	; 2-d digit for PWM
-   188: 0000B5   E01E  LDI PORTB_out, 0b00001110	; Open 2-d digit
-   189: 0000B6   B915  OUT PORTB, PORTB_out		; 
-   190: 0000B7   E183  LDI printByte, 19			; print 1.
-   191: 0000B8   D040  RCALL pushByte				; push  1.
-   192: 0000B9   D0D8  RCALL delay_setup			; delay
-   193: 0000BA   C00B  RJMP mode_12_end
-   194: 	
-   195: mode_2:
-   196: 	;RCALL adc_convert			; get ADC
-   197: 0000BB   2FCD  MOV pwm_reg_2, adc_res
-   198: 
-   199: 	; 1-s digit for PWM
-   200: 0000BC   E011  LDI PORTB_out, 0b00000001	; Open 1-d digit
-   201: 0000BD   B915  OUT PORTB, PORTB_out		; 
-   202: 0000BE   E08D  LDI printByte, 13			; print d
-   203: 0000BF   D039  RCALL pushByte				; push  d
-   204: 0000C0   D0D1  RCALL delay_setup			; delay
-   205: 	; 2-d digit for PWM
-   206: 0000C1   E018  LDI PORTB_out, 0b00001000	; Open 2-d digit
-   207: 0000C2   B915  OUT PORTB, PORTB_out		; 
-   208: 0000C3   E184  LDI printByte, 20			; print 2.
-   209: 0000C4   D034  RCALL pushByte				; push  2.
-   210: 0000C5   D0CC  RCALL delay_setup			; delay
-   211: 	
-   212: mode_12_end:
-   213: 	; setup out
-   214: 0000C6   2F0D  MOV tmp_reg, adc_res		; convert to 0-15
-   215: 0000C7   7F00  ANDI tmp_reg, 0xF0
-   216: 0000C8   9506  LSR tmp_reg
-   217: 0000C9   9506  LSR tmp_reg
-   218: 0000CA   9506  LSR tmp_reg
-   219: 0000CB   9506  LSR tmp_reg
-   220: 	; 3-d digit for PWM
-   221: 0000CC   E110  LDI PORTB_out, 0b00010000	; Open 3-d digit
-   222: 0000CD   B915  OUT PORTB, PORTB_out		; 
-   223: 0000CE   2F80  MOV printByte, tmp_reg		; print digit
-   224: 0000CF   D029  RCALL pushByte				; push  digit
-   225: 0000D0   D0C1  RCALL delay_setup			; delay
-   226: 
-   227: 	; setup out
-   228: 0000D1   2F0D  MOV tmp_reg, adc_res		; convert to 0-15
-   229: 0000D2   700F  ANDI tmp_reg, 0x0F
-   230: 	; 4-d digit for PWM
-   231: 0000D3   E210  LDI PORTB_out, 0b00100000	; Open 4-d digit
-   232: 0000D4   B915  OUT PORTB, PORTB_out		; 
-   233: 0000D5   2F80  MOV printByte, tmp_reg		; print digit
-   234: 0000D6   D022  RCALL pushByte				; push  digit
-   235: 0000D7   D0BA  RCALL delay_setup			; delay
-   236: 0000D8   CF90  RJMP main
-   237: mode_3:
-   238: 	;RCALL adc_convert			; get ADC
-   239: 
-   240: 	; 1-s digit for PWM
-   241: 0000D9   E011  LDI PORTB_out, 0b00000001	; Open 1-d digit
-   242: 0000DA   B915  OUT PORTB, PORTB_out		; 
-   243: 0000DB   E08C  LDI printByte, 12			; print C
-   244: 0000DC   D01C  RCALL pushByte				; push  C
-   245: 0000DD   D0B4  RCALL delay_setup			; delay
-   246: 	; 2-d digit for PWM
-   247: 0000DE   E018  LDI PORTB_out, 0b00001000	; Open 2-d digit
-   248: 0000DF   B915  OUT PORTB, PORTB_out		; 
-   249: 0000E0   E185  LDI printByte, 21			; print H.
-   250: 0000E1   D017  RCALL pushByte				; push  H.
-   251: 0000E2   D0AF  RCALL delay_setup			; delay
-   252: 	
-   253: 	; setup out
-   254: 0000E3   2788  CLR printByte
-   255: 0000E4   FBD7  BST adc_res, 7				; look for 7-bit (128-255)
-   256: 	; 3-d digit for PWM
-   257: 0000E5   E110  LDI PORTB_out, 0b00010000	; Open 3-d digit
-   258: 0000E6   B915  OUT PORTB, PORTB_out		; 
-   259: 0000E7   F980  BLD printByte, 0			; print bit
-   260: 0000E8   D010  RCALL pushByte				; push  bit
-   261: 0000E9   D0A8  RCALL delay_setup	
-   262: 
-   263: 	; setup out
-   264: 0000EA   2788  CLR printByte
-   265: 0000EB   FBD6  BST adc_res, 6				; look for 6-bit (64-127 and 192-255)
-   266: 	; 4-d digit for PWM
-   267: 0000EC   E210  LDI PORTB_out, 0b00100000	; Open 4-d digit
-   268: 0000ED   B915  OUT PORTB, PORTB_out		; 
-   269: 0000EE   F980  BLD printByte, 0			; print bit
-   270: 0000EF   D009  RCALL pushByte				; push  bit
-   271: 0000F0   D0A1  RCALL delay_setup	
-   272: 
-   273: 0000F1   2FAD  MOV pwmOutReg, adc_res		; set 6-7 bit to reg
-   274: 0000F2   95A6  LSR pwmOutReg
-   275: 0000F3   95A6  LSR pwmOutReg
-   276: 0000F4   95A6  LSR pwmOutReg
-   277: 0000F5   95A6  LSR pwmOutReg
-   278: 0000F6   95A6  LSR pwmOutReg
-   279: 0000F7   95A6  LSR pwmOutReg
-   280: 
-   281: 0000F8   CF70  RJMP main
-   282: 
-   283: pushByte:
-   284: 0000F9   D027  RCALL printByte_func 		; convert print
-   285: 0000FA   930F  PUSH tmp_reg				; Save tmp to stack
-   286: 0000FB   9100  LDS tmp_reg, SREG			; Save SREG 
+   154: 00009A   B818  OUT PORTC, R1				; clear C
+   155: 00009B   E00F  LDI tmp_reg, 0x0F			; clear D
+   156: 00009C   B90B  OUT PORTD, tmp_reg			; (without intr)
+   157: 
+   158: 00009D   E009  LDI tmp_reg, 9				; 0b****1001
+   159: 00009E   1740  CP workModeReg, tmp_reg
+   160: 00009F   F4D8  BRSH mode_2
+   161: 0000A0   E008  LDI tmp_reg, 8				; 0b****1000
+   162: 0000A1   1740  CP workModeReg, tmp_reg
+   163: 0000A2   F4C0  BRSH mode_2
+   164: 0000A3   E005  LDI tmp_reg, 5				; 0b****0101
+   165: 0000A4   1740  CP workModeReg, tmp_reg
+   166: 0000A5   F448  BRSH mode_1
+   167: 0000A6   E004  LDI tmp_reg, 4				; 0b****0100
+   168: 0000A7   1740  CP workModeReg, tmp_reg
+   169: 0000A8   F430  BRSH mode_1
+   170: 0000A9   E001  LDI tmp_reg, 1				; 0b****0001
+   171: 0000AA   1740  CP workModeReg, tmp_reg
+   172: 0000AB   F568  BRSH mode_3
+   173: 0000AC   E000  LDI tmp_reg, 0				; 0b****0000
+   174: 0000AD   1740  CP workModeReg, tmp_reg
+   175: 0000AE   F550  BRSH mode_3
+   176: mode_1:
+   177: 	;RCALL adc_convert			; get ADC
+   178: 0000AF   2FBD  MOV pwm_reg_1, adc_res
+   179: 
+   180: 	;MOV tmp_reg, adc_res
+   181: 	;STS OCR1AL, tmp_reg		; push D10 pwm
+   182: 	;LDI tmp_reg, 0xFF
+   183: 	;EOR tmp_reg, adc_res
+   184: 	;STS OCR1BL, tmp_reg		; push D11 pwm
+   185: 
+   186: 	; 1-s digit for PWM
+   187: 0000B0   E017  LDI PORTB_out, 0b00000111	; Open 1-d digit
+   188: 0000B1   B915  OUT PORTB, PORTB_out		; 
+   189: 0000B2   E08D  LDI printByte, 13			; print d
+   190: 0000B3   D045  RCALL pushByte				; push  d
+   191: 0000B4   D0DD  RCALL delay_setup			; delay
+   192: 	; 2-d digit for PWM
+   193: 0000B5   E01E  LDI PORTB_out, 0b00001110	; Open 2-d digit
+   194: 0000B6   B915  OUT PORTB, PORTB_out		; 
+   195: 0000B7   E183  LDI printByte, 19			; print 1.
+   196: 0000B8   D040  RCALL pushByte				; push  1.
+   197: 0000B9   D0D8  RCALL delay_setup			; delay
+   198: 0000BA   C00B  RJMP mode_12_end
+   199: 	
+   200: mode_2:
+   201: 	;RCALL adc_convert			; get ADC
+   202: 0000BB   2FCD  MOV pwm_reg_2, adc_res
+   203: 	
+   204: 	;MOV tmp_reg, adc_res
+   205: 	;STS OCR1AL, tmp_reg		; push D10 pwm
+   206: 	;LDI tmp_reg, 0xFF
+   207: 	;EOR tmp_reg, adc_res
+   208: 	;STS OCR1BL, tmp_reg		; push D11 pwm
+   209: 	; 1-s digit for PWM
+   210: 0000BC   E011  LDI PORTB_out, 0b00000001	; Open 1-d digit
+   211: 0000BD   B915  OUT PORTB, PORTB_out		; 
+   212: 0000BE   E08D  LDI printByte, 13			; print d
+   213: 0000BF   D039  RCALL pushByte				; push  d
+   214: 0000C0   D0D1  RCALL delay_setup			; delay
+   215: 	; 2-d digit for PWM
+   216: 0000C1   E018  LDI PORTB_out, 0b00001000	; Open 2-d digit
+   217: 0000C2   B915  OUT PORTB, PORTB_out		; 
+   218: 0000C3   E184  LDI printByte, 20			; print 2.
+   219: 0000C4   D034  RCALL pushByte				; push  2.
+   220: 0000C5   D0CC  RCALL delay_setup			; delay
+   221: 	
+   222: mode_12_end:
+   223: 	; setup out
+   224: 0000C6   2F0D  MOV tmp_reg, adc_res		; convert to 0-15
+   225: 0000C7   7F00  ANDI tmp_reg, 0xF0
+   226: 0000C8   9506  LSR tmp_reg
+   227: 0000C9   9506  LSR tmp_reg
+   228: 0000CA   9506  LSR tmp_reg
+   229: 0000CB   9506  LSR tmp_reg
+   230: 	; 3-d digit for PWM
+   231: 0000CC   E110  LDI PORTB_out, 0b00010000	; Open 3-d digit
+   232: 0000CD   B915  OUT PORTB, PORTB_out		; 
+   233: 0000CE   2F80  MOV printByte, tmp_reg		; print digit
+   234: 0000CF   D029  RCALL pushByte				; push  digit
+   235: 0000D0   D0C1  RCALL delay_setup			; delay
+   236: 
+   237: 	; setup out
+   238: 0000D1   2F0D  MOV tmp_reg, adc_res		; convert to 0-15
+   239: 0000D2   700F  ANDI tmp_reg, 0x0F
+   240: 	; 4-d digit for PWM
+   241: 0000D3   E210  LDI PORTB_out, 0b00100000	; Open 4-d digit
+   242: 0000D4   B915  OUT PORTB, PORTB_out		; 
+   243: 0000D5   2F80  MOV printByte, tmp_reg		; print digit
+   244: 0000D6   D022  RCALL pushByte				; push  digit
+   245: 0000D7   D0BA  RCALL delay_setup			; delay
+   246: 0000D8   CF90  RJMP main
+   247: mode_3:
+   248: 	;RCALL adc_convert			; get ADC
+   249: 	;MOV tmp_reg, adc_res
+   250: 	;STS OCR1AL, tmp_reg		; push D10 pwm
+   251: 	;LDI tmp_reg, 0xFF
+   252: 	;EOR tmp_reg, adc_res
+   253: 	;STS OCR1BL, tmp_reg		; push D11 pwm
+   254: 
+   255: 	; 1-s digit for PWM
+   256: 0000D9   E011  LDI PORTB_out, 0b00000001	; Open 1-d digit
+   257: 0000DA   B915  OUT PORTB, PORTB_out		; 
+   258: 0000DB   E08C  LDI printByte, 12			; print C
+   259: 0000DC   D01C  RCALL pushByte				; push  C
+   260: 0000DD   D0B4  RCALL delay_setup			; delay
+   261: 	; 2-d digit for PWM
+   262: 0000DE   E018  LDI PORTB_out, 0b00001000	; Open 2-d digit
+   263: 0000DF   B915  OUT PORTB, PORTB_out		; 
+   264: 0000E0   E185  LDI printByte, 21			; print H.
+   265: 0000E1   D017  RCALL pushByte				; push  H.
+   266: 0000E2   D0AF  RCALL delay_setup			; delay
+   267: 	
+   268: 	; setup out
+   269: 0000E3   2788  CLR printByte
+   270: 0000E4   FBD7  BST adc_res, 7				; look for 7-bit (128-255)
+   271: 	; 3-d digit for PWM
+   272: 0000E5   E110  LDI PORTB_out, 0b00010000	; Open 3-d digit
+   273: 0000E6   B915  OUT PORTB, PORTB_out		; 
+   274: 0000E7   F980  BLD printByte, 0			; print bit
+   275: 0000E8   D010  RCALL pushByte				; push  bit
+   276: 0000E9   D0A8  RCALL delay_setup	
+   277: 
+   278: 	; setup out
+   279: 0000EA   2788  CLR printByte
+   280: 0000EB   FBD6  BST adc_res, 6				; look for 6-bit (64-127 and 192-255)
+   281: 	; 4-d digit for PWM
+   282: 0000EC   E210  LDI PORTB_out, 0b00100000	; Open 4-d digit
+   283: 0000ED   B915  OUT PORTB, PORTB_out		; 
+   284: 0000EE   F980  BLD printByte, 0			; print bit
+   285: 0000EF   D009  RCALL pushByte				; push  bit
+   286: 0000F0   D0A1  RCALL delay_setup	
+   287: 
+   288: 0000F1   2FAD  MOV pwmOutReg, adc_res		; set 6-7 bit to reg
+   289: 0000F2   95A6  LSR pwmOutReg
+   290: 0000F3   95A6  LSR pwmOutReg
+   291: 0000F4   95A6  LSR pwmOutReg
+   292: 0000F5   95A6  LSR pwmOutReg
+   293: 0000F6   95A6  LSR pwmOutReg
+   294: 0000F7   95A6  LSR pwmOutReg
+   295: 
+   296: 0000F8   CF70  RJMP main
+   297: 
+   298: pushByte:
+   299: 0000F9   D027  RCALL printByte_func 		; convert print
+   300: 0000FA   930F  PUSH tmp_reg				; Save tmp to stack
+   301: 0000FB   9100  LDS tmp_reg, SREG			; Save SREG 
         0000FC   003F
-   287: 0000FD   930F  PUSH tmp_reg				; to stack
-   288: 	
-   289: 0000FE   2F38  MOV PORTD_out, printByte	; copy
-   290: 0000FF   7F30  ANDI PORTD_out, 0xF0		; get highest half
-   291: 000100   E00F  LDI tmp_reg, 0x0F			; add const
-   292: 000101   0F30  ADD PORTD_out, tmp_reg		; 0b****1111 for intr
-   293: 000102   B93B  OUT PORTD, PORTD_out		; push D
-   294: 000103   2F28  MOV PORTC_out, printByte	; copy
-   295: 000104   702F  ANDI PORTC_out, 0x0F		; get lowest half
-   296: 000105   B928  OUT PORTC, PORTC_out		; push C
-   297: 000106   910F  POP tmp_reg					; load SREG
-   298: 000107   9300  STS SREG, tmp_reg			; from stack
+   302: 0000FD   930F  PUSH tmp_reg				; to stack
+   303: 	
+   304: 0000FE   2F38  MOV PORTD_out, printByte	; copy
+   305: 0000FF   7F30  ANDI PORTD_out, 0xF0		; get highest half
+   306: 000100   E00F  LDI tmp_reg, 0x0F			; add const
+   307: 000101   0F30  ADD PORTD_out, tmp_reg		; 0b****1111 for intr
+   308: 000102   B93B  OUT PORTD, PORTD_out		; push D
+   309: 000103   2F28  MOV PORTC_out, printByte	; copy
+   310: 000104   702F  ANDI PORTC_out, 0x0F		; get lowest half
+   311: 000105   B928  OUT PORTC, PORTC_out		; push C
+   312: 000106   910F  POP tmp_reg					; load SREG
+   313: 000107   9300  STS SREG, tmp_reg			; from stack
         000108   003F
-   299: 000109   910F  POP tmp_reg					; load tmp from stack
-   300: 00010A   9508  RET
-   301: 
-   302: changeWorkMode:
-   303: 00010B   930F  PUSH tmp_reg			; Send tmp to Stack
-   304: 00010C   9543  inc workModeReg			; wm++
-   305: 00010D   E002  LDI tmp_reg, 0x02		; compare with 0b00000010
-   306: 00010E   2304  AND tmp_reg, workModeReg; if second bit is down
-   307: 00010F   F011  BREQ changeWorkMode_exit; goto and
-   308: 000110   EF0C  LDI tmp_reg, 0xFC		; else erase last 2 bits
-   309: 000111   2340  AND workModeReg, tmp_reg
-   310: changeWorkMode_exit:
-   311: 000112   910F  POP tmp_reg				; Read tmp from Stack
-   312: 000113   9478  SEI						; Attach intr
-   313: 000114   CF54  RJMP main					; goto main
-   314: 
-   315: changeSettMode:
-   316: 000115   930F  PUSH tmp_reg			; Send tmp to Stack
-   317: 000116   E004  LDI tmp_reg, 0b00000100	; set 4 for adding
-   318: 000117   0F40  ADD workModeReg, tmp_reg; wm+=4
-   319: 000118   E00C  LDI tmp_reg, 0x0C		; compare with 0b0000_11_00
-   320: 000119   2304  AND tmp_reg, workModeReg; get bits of settmode
-   321: 00011A   500C  SUBI tmp_reg, 0x0C		; check if not 0b****1100
-   322: 00011B   F411  BRNE changeSettMode_exit; goto and
-   323: 00011C   EE03  LDI tmp_reg, 0xE3		; else erase 3-5 bits
-   324: 00011D   2340  AND workModeReg, tmp_reg
-   325: changeSettMode_exit:
-   326: 00011E   910F  POP tmp_reg				; Read tmp from Stack
-   327: 00011F   9478  SEI						; Attach intr
-   328: 000120   CF48  RJMP main					; goto main
+   314: 000109   910F  POP tmp_reg					; load tmp from stack
+   315: 00010A   9508  RET
+   316: 
+   317: changeWorkMode:
+   318: 00010B   930F  PUSH tmp_reg			; Send tmp to Stack
+   319: 00010C   9543  inc workModeReg			; wm++
+   320: 00010D   E002  LDI tmp_reg, 0x02		; compare with 0b00000010
+   321: 00010E   2304  AND tmp_reg, workModeReg; if second bit is down
+   322: 00010F   F011  BREQ changeWorkMode_exit; goto and
+   323: 000110   EF0C  LDI tmp_reg, 0xFC		; else erase last 2 bits
+   324: 000111   2340  AND workModeReg, tmp_reg
+   325: changeWorkMode_exit:
+   326: 000112   910F  POP tmp_reg				; Read tmp from Stack
+   327: 000113   9478  SEI						; Attach intr
+   328: 000114   CF54  RJMP main					; goto main
    329: 
-   330: printByte_func:				; many IFs, no to comment
-   331: 000121   930F  PUSH tmp_reg
-   332: 000122   E105  LDI tmp_reg, 21
-   333: 000123   1780  CP printByte, tmp_reg
-   334: 000124   F5F8  BRSH print_H
-   335: 000125   E104  LDI tmp_reg, 20
-   336: 000126   1780  CP printByte, tmp_reg
-   337: 000127   F5F0  BRSH print_2dot
-   338: 000128   E103  LDI tmp_reg, 19
-   339: 000129   1780  CP printByte, tmp_reg
-   340: 00012A   F5E8  BRSH print_1dot
-   341: 00012B   E102  LDI tmp_reg, 18
-   342: 00012C   1780  CP printByte, tmp_reg
-   343: 00012D   F5E0  BRSH print_minus
-   344: 00012E   E101  LDI tmp_reg, 17
-   345: 00012F   1780  CP printByte, tmp_reg
-   346: 000130   F5D8  BRSH print_N
-   347: 000131   E100  LDI tmp_reg, 16
-   348: 000132   1780  CP printByte, tmp_reg
-   349: 000133   F5D0  BRSH print_O
-   350: 000134   E00F  LDI tmp_reg, 15
-   351: 000135   1780  CP printByte, tmp_reg
-   352: 000136   F5C8  BRSH print_F
-   353: 000137   E00E  LDI tmp_reg, 14
-   354: 000138   1780  CP printByte, tmp_reg
-   355: 000139   F5C0  BRSH print_E
-   356: 00013A   E00D  LDI tmp_reg, 13
-   357: 00013B   1780  CP printByte, tmp_reg
-   358: 00013C   F5B8  BRSH print_D
-   359: 00013D   E00C  LDI tmp_reg, 12
-   360: 00013E   1780  CP printByte, tmp_reg
-   361: 00013F   F5B0  BRSH print_C
-   362: 000140   E00B  LDI tmp_reg, 11
-   363: 000141   1780  CP printByte, tmp_reg
-   364: 000142   F5A8  BRSH print_B
-   365: 000143   E00A  LDI tmp_reg, 10
-   366: 000144   1780  CP printByte, tmp_reg
-   367: 000145   F5A0  BRSH print_A
-   368: 000146   E009  LDI tmp_reg, 9
-   369: 000147   1780  CP printByte, tmp_reg
-   370: 000148   F598  BRSH print_9
-   371: 000149   E008  LDI tmp_reg, 8
-   372: 00014A   1780  CP printByte, tmp_reg
-   373: 00014B   F590  BRSH print_8
-   374: 00014C   E007  LDI tmp_reg, 7
-   375: 00014D   1780  CP printByte, tmp_reg
-   376: 00014E   F588  BRSH print_7
-   377: 00014F   E006  LDI tmp_reg, 6
-   378: 000150   1780  CP printByte, tmp_reg
-   379: 000151   F580  BRSH print_6
-   380: 000152   E005  LDI tmp_reg, 5
-   381: 000153   1780  CP printByte, tmp_reg
-   382: 000154   F578  BRSH print_5
-   383: 000155   E004  LDI tmp_reg, 4
-   384: 000156   1780  CP printByte, tmp_reg
-   385: 000157   F570  BRSH print_4
-   386: 000158   E003  LDI tmp_reg, 3
-   387: 000159   1780  CP printByte, tmp_reg
-   388: 00015A   F568  BRSH print_3
-   389: 00015B   E002  LDI tmp_reg, 2
-   390: 00015C   1780  CP printByte, tmp_reg
-   391: 00015D   F560  BRSH print_2
-   392: 00015E   E001  LDI tmp_reg, 1
-   393: 00015F   1780  CP printByte, tmp_reg
-   394: 000160   F558  BRSH print_1
-   395: 000161   E000  LDI tmp_reg, 0
-   396: 000162   1780  CP printByte, tmp_reg
-   397: 000163   F550  BRSH print_0
-   398: print_H:
-   399: 000164   EE8D  LDI printByte, 0xED
-   400: 000165   C02A  RJMP label_ret	
-   401: print_2dot:
-   402: 000166   EB87  LDI printByte, 0xB7
-   403: 000167   C028  RJMP label_ret	
-   404: print_1dot:
-   405: 000168   E08D  LDI printByte, 0x0D
-   406: 000169   C026  RJMP label_ret	
-   407: print_minus:
-   408: 00016A   E880  LDI printByte, 0x80
-   409: 00016B   C024  RJMP label_ret	
-   410: print_N:
-   411: 00016C   EA88  LDI printByte, 0xA8
-   412: 00016D   C022  RJMP label_ret	
-   413: print_O:
-   414: 00016E   EB88  LDI printByte, 0xB8
-   415: 00016F   C020  RJMP label_ret	
-   416: print_F:
-   417: 000170   EE82  LDI printByte, 0xE2
-   418: 000171   C01E  RJMP label_ret	
-   419: print_E:
-   420: 000172   EF82  LDI printByte, 0xF2
-   421: 000173   C01C  RJMP label_ret	
-   422: print_D:
-   423: 000174   EB8C  LDI printByte, 0xBC
-   424: 000175   C01A  RJMP label_ret	
-   425: print_C:
-   426: 000176   E782  LDI printByte, 0x72
-   427: 000177   C018  RJMP label_ret	
-   428: print_B:
-   429: 000178   EF88  LDI printByte, 0xF8
-   430: 000179   C016  RJMP label_ret	
-   431: print_A:
-   432: 00017A   EE8E  LDI printByte, 0xEE
-   433: 00017B   C014  RJMP label_ret	
-   434: print_9:
-   435: 00017C   ED8E  LDI printByte, 0xDE
-   436: 00017D   C012  RJMP label_ret	
-   437: print_8:
-   438: 00017E   EF8E  LDI printByte, 0xFE
-   439: 00017F   C010  RJMP label_ret	
-   440: print_7:
-   441: 000180   E08E  LDI printByte, 0x0E
-   442: 000181   C00E  RJMP label_ret
-   443: print_6:
-   444: 000182   EF8A  LDI printByte, 0xFA
-   445: 000183   C00C  RJMP label_ret	
-   446: print_5:
-   447: 000184   ED8A  LDI printByte, 0xDA
-   448: 000185   C00A  RJMP label_ret	
-   449: print_4:
-   450: 000186   EC8C  LDI printByte, 0xCC
-   451: 000187   C008  RJMP label_ret	
-   452: print_3:
-   453: 000188   E98E  LDI printByte, 0x9E
-   454: 000189   C006  RJMP label_ret	
-   455: print_2:
-   456: 00018A   EB86  LDI printByte, 0xB6
-   457: 00018B   C004  RJMP label_ret	
-   458: print_1:
-   459: 00018C   E08C  LDI printByte, 0x0C
-   460: 00018D   C002  RJMP label_ret
-   461: print_0:
-   462: 00018E   E78E  LDI printByte, 0x7E
-   463: 00018F   C000  RJMP label_ret
-   464: label_ret:
-   465: 000190   910F  POP tmp_reg
-   466: 000191   9508  RET
-   467:    
-   468: delay_setup:
-   469: 000192   2755  CLR timer100Byte
-   470: 000193   2766  CLR timer010Byte
-   471: 000194   2777  CLR timer001Byte
-   472: 000195   2411  CLR R1
-   473: 000196   E050  LDI timer100Byte, 0 			; here is the hihest byte
-   474: 000197   E061  LDI timer010Byte, 1 			; here is the lowest byte
-   475: 
-   476: 000198   0F55  LSL timer100Byte				; << 2 left to have 10 clear bits at right
-   477: 000199   FB67  BST timer010Byte, 7			; 14 left to set time
-   478: 00019A   F950  BLD timer100Byte, 0			; 
-   479: 00019B   0F66  LSL timer010Byte
-   480: 00019C   0F55  LSL timer100Byte
-   481: 00019D   FB67  BST timer010Byte, 7
-   482: 00019E   F950  BLD timer100Byte, 0
-   483: 00019F   0F66  LSL timer010Byte
-   484: delay_cycle:
-   485: 0001A0   5071  SUBI timer001Byte, 1 	; 1 tick
-   486: 0001A1   4060  SBCI timer010Byte, 0 	; 1 tick
-   487: 0001A2   4050  SBCI timer100Byte, 0 	; 1 tick
-   488: 
-   489: 0001A3   1151  CPSE timer100Byte, R1 	; 1 ticks, if equal then skip (2 ticks)
-   490: 0001A4   C008  RJMP wait_nop_8 			; 2 ticks
-   491: 0001A5   1161  CPSE timer010Byte, R1 	; 1 ticks, if equal then skip (2 ticks)
-   492: 0001A6   C009  RJMP wait_nop_5 			; 2 ticks
-   493: 0001A7   1171  CPSE timer001Byte, R1 	; 1 ticks, if equal then skip (2 ticks)
-   494: 0001A8   C00A  RJMP wait_nop_2 			; 2 ticks
-   495: 0001A9   0000  NOP
-   496: 0001AA   0000  NOP
-   497: 0001AB   0000  NOP
-   498: 0001AC   9508  RET                        	; go back, 4 ticks
-   499: wait_nop_8:
-   500: 0001AD   0000  NOP
-   501: 0001AE   0000  NOP
-   502: 0001AF   0000  NOP
-   503: wait_nop_5:
-   504: 0001B0   0000  NOP
-   505: 0001B1   0000  NOP
-   506: 0001B2   0000  NOP
-   507: wait_nop_2:
-   508: 0001B3   0000  NOP
-   509: 0001B4   0000  NOP
-   510: 0001B5   CFEA  RJMP   delay_cycle
-   511:    
+   330: changeSettMode:
+   331: 000115   930F  PUSH tmp_reg			; Send tmp to Stack
+   332: 000116   E004  LDI tmp_reg, 0b00000100	; set 4 for adding
+   333: 000117   0F40  ADD workModeReg, tmp_reg; wm+=4
+   334: 000118   E00C  LDI tmp_reg, 0x0C		; compare with 0b0000_11_00
+   335: 000119   2304  AND tmp_reg, workModeReg; get bits of settmode
+   336: 00011A   500C  SUBI tmp_reg, 0x0C		; check if not 0b****1100
+   337: 00011B   F411  BRNE changeSettMode_exit; goto and
+   338: 00011C   EE03  LDI tmp_reg, 0xE3		; else erase 3-5 bits
+   339: 00011D   2340  AND workModeReg, tmp_reg
+   340: changeSettMode_exit:
+   341: 00011E   910F  POP tmp_reg				; Read tmp from Stack
+   342: 00011F   9478  SEI						; Attach intr
+   343: 000120   CF48  RJMP main					; goto main
+   344: 
+   345: printByte_func:				; many IFs, no to comment
+   346: 000121   930F  PUSH tmp_reg
+   347: 000122   E105  LDI tmp_reg, 21
+   348: 000123   1780  CP printByte, tmp_reg
+   349: 000124   F5F8  BRSH print_H
+   350: 000125   E104  LDI tmp_reg, 20
+   351: 000126   1780  CP printByte, tmp_reg
+   352: 000127   F5F0  BRSH print_2dot
+   353: 000128   E103  LDI tmp_reg, 19
+   354: 000129   1780  CP printByte, tmp_reg
+   355: 00012A   F5E8  BRSH print_1dot
+   356: 00012B   E102  LDI tmp_reg, 18
+   357: 00012C   1780  CP printByte, tmp_reg
+   358: 00012D   F5E0  BRSH print_minus
+   359: 00012E   E101  LDI tmp_reg, 17
+   360: 00012F   1780  CP printByte, tmp_reg
+   361: 000130   F5D8  BRSH print_N
+   362: 000131   E100  LDI tmp_reg, 16
+   363: 000132   1780  CP printByte, tmp_reg
+   364: 000133   F5D0  BRSH print_O
+   365: 000134   E00F  LDI tmp_reg, 15
+   366: 000135   1780  CP printByte, tmp_reg
+   367: 000136   F5C8  BRSH print_F
+   368: 000137   E00E  LDI tmp_reg, 14
+   369: 000138   1780  CP printByte, tmp_reg
+   370: 000139   F5C0  BRSH print_E
+   371: 00013A   E00D  LDI tmp_reg, 13
+   372: 00013B   1780  CP printByte, tmp_reg
+   373: 00013C   F5B8  BRSH print_D
+   374: 00013D   E00C  LDI tmp_reg, 12
+   375: 00013E   1780  CP printByte, tmp_reg
+   376: 00013F   F5B0  BRSH print_C
+   377: 000140   E00B  LDI tmp_reg, 11
+   378: 000141   1780  CP printByte, tmp_reg
+   379: 000142   F5A8  BRSH print_B
+   380: 000143   E00A  LDI tmp_reg, 10
+   381: 000144   1780  CP printByte, tmp_reg
+   382: 000145   F5A0  BRSH print_A
+   383: 000146   E009  LDI tmp_reg, 9
+   384: 000147   1780  CP printByte, tmp_reg
+   385: 000148   F598  BRSH print_9
+   386: 000149   E008  LDI tmp_reg, 8
+   387: 00014A   1780  CP printByte, tmp_reg
+   388: 00014B   F590  BRSH print_8
+   389: 00014C   E007  LDI tmp_reg, 7
+   390: 00014D   1780  CP printByte, tmp_reg
+   391: 00014E   F588  BRSH print_7
+   392: 00014F   E006  LDI tmp_reg, 6
+   393: 000150   1780  CP printByte, tmp_reg
+   394: 000151   F580  BRSH print_6
+   395: 000152   E005  LDI tmp_reg, 5
+   396: 000153   1780  CP printByte, tmp_reg
+   397: 000154   F578  BRSH print_5
+   398: 000155   E004  LDI tmp_reg, 4
+   399: 000156   1780  CP printByte, tmp_reg
+   400: 000157   F570  BRSH print_4
+   401: 000158   E003  LDI tmp_reg, 3
+   402: 000159   1780  CP printByte, tmp_reg
+   403: 00015A   F568  BRSH print_3
+   404: 00015B   E002  LDI tmp_reg, 2
+   405: 00015C   1780  CP printByte, tmp_reg
+   406: 00015D   F560  BRSH print_2
+   407: 00015E   E001  LDI tmp_reg, 1
+   408: 00015F   1780  CP printByte, tmp_reg
+   409: 000160   F558  BRSH print_1
+   410: 000161   E000  LDI tmp_reg, 0
+   411: 000162   1780  CP printByte, tmp_reg
+   412: 000163   F550  BRSH print_0
+   413: print_H:
+   414: 000164   EE8D  LDI printByte, 0xED
+   415: 000165   C02A  RJMP label_ret	
+   416: print_2dot:
+   417: 000166   EB87  LDI printByte, 0xB7
+   418: 000167   C028  RJMP label_ret	
+   419: print_1dot:
+   420: 000168   E08D  LDI printByte, 0x0D
+   421: 000169   C026  RJMP label_ret	
+   422: print_minus:
+   423: 00016A   E880  LDI printByte, 0x80
+   424: 00016B   C024  RJMP label_ret	
+   425: print_N:
+   426: 00016C   EA88  LDI printByte, 0xA8
+   427: 00016D   C022  RJMP label_ret	
+   428: print_O:
+   429: 00016E   EB88  LDI printByte, 0xB8
+   430: 00016F   C020  RJMP label_ret	
+   431: print_F:
+   432: 000170   EE82  LDI printByte, 0xE2
+   433: 000171   C01E  RJMP label_ret	
+   434: print_E:
+   435: 000172   EF82  LDI printByte, 0xF2
+   436: 000173   C01C  RJMP label_ret	
+   437: print_D:
+   438: 000174   EB8C  LDI printByte, 0xBC
+   439: 000175   C01A  RJMP label_ret	
+   440: print_C:
+   441: 000176   E782  LDI printByte, 0x72
+   442: 000177   C018  RJMP label_ret	
+   443: print_B:
+   444: 000178   EF88  LDI printByte, 0xF8
+   445: 000179   C016  RJMP label_ret	
+   446: print_A:
+   447: 00017A   EE8E  LDI printByte, 0xEE
+   448: 00017B   C014  RJMP label_ret	
+   449: print_9:
+   450: 00017C   ED8E  LDI printByte, 0xDE
+   451: 00017D   C012  RJMP label_ret	
+   452: print_8:
+   453: 00017E   EF8E  LDI printByte, 0xFE
+   454: 00017F   C010  RJMP label_ret	
+   455: print_7:
+   456: 000180   E08E  LDI printByte, 0x0E
+   457: 000181   C00E  RJMP label_ret
+   458: print_6:
+   459: 000182   EF8A  LDI printByte, 0xFA
+   460: 000183   C00C  RJMP label_ret	
+   461: print_5:
+   462: 000184   ED8A  LDI printByte, 0xDA
+   463: 000185   C00A  RJMP label_ret	
+   464: print_4:
+   465: 000186   EC8C  LDI printByte, 0xCC
+   466: 000187   C008  RJMP label_ret	
+   467: print_3:
+   468: 000188   E98E  LDI printByte, 0x9E
+   469: 000189   C006  RJMP label_ret	
+   470: print_2:
+   471: 00018A   EB86  LDI printByte, 0xB6
+   472: 00018B   C004  RJMP label_ret	
+   473: print_1:
+   474: 00018C   E08C  LDI printByte, 0x0C
+   475: 00018D   C002  RJMP label_ret
+   476: print_0:
+   477: 00018E   E78E  LDI printByte, 0x7E
+   478: 00018F   C000  RJMP label_ret
+   479: label_ret:
+   480: 000190   910F  POP tmp_reg
+   481: 000191   9508  RET
+   482:    
+   483: delay_setup:
+   484: 000192   2755  CLR timer100Byte
+   485: 000193   2766  CLR timer010Byte
+   486: 000194   2777  CLR timer001Byte
+   487: 000195   2411  CLR R1
+   488: 000196   E050  LDI timer100Byte, 0 			; here is the hihest byte
+   489: 000197   E061  LDI timer010Byte, 1 			; here is the lowest byte
+   490: 
+   491: 000198   0F55  LSL timer100Byte				; << 2 left to have 10 clear bits at right
+   492: 000199   FB67  BST timer010Byte, 7			; 14 left to set time
+   493: 00019A   F950  BLD timer100Byte, 0			; 
+   494: 00019B   0F66  LSL timer010Byte
+   495: 00019C   0F55  LSL timer100Byte
+   496: 00019D   FB67  BST timer010Byte, 7
+   497: 00019E   F950  BLD timer100Byte, 0
+   498: 00019F   0F66  LSL timer010Byte
+   499: delay_cycle:
+   500: 0001A0   5071  SUBI timer001Byte, 1 	; 1 tick
+   501: 0001A1   4060  SBCI timer010Byte, 0 	; 1 tick
+   502: 0001A2   4050  SBCI timer100Byte, 0 	; 1 tick
+   503: 
+   504: 0001A3   1151  CPSE timer100Byte, R1 	; 1 ticks, if equal then skip (2 ticks)
+   505: 0001A4   C008  RJMP wait_nop_8 			; 2 ticks
+   506: 0001A5   1161  CPSE timer010Byte, R1 	; 1 ticks, if equal then skip (2 ticks)
+   507: 0001A6   C009  RJMP wait_nop_5 			; 2 ticks
+   508: 0001A7   1171  CPSE timer001Byte, R1 	; 1 ticks, if equal then skip (2 ticks)
+   509: 0001A8   C00A  RJMP wait_nop_2 			; 2 ticks
+   510: 0001A9   0000  NOP
+   511: 0001AA   0000  NOP
+   512: 0001AB   0000  NOP
+   513: 0001AC   9508  RET                        	; go back, 4 ticks
+   514: wait_nop_8:
+   515: 0001AD   0000  NOP
+   516: 0001AE   0000  NOP
+   517: 0001AF   0000  NOP
+   518: wait_nop_5:
+   519: 0001B0   0000  NOP
+   520: 0001B1   0000  NOP
+   521: 0001B2   0000  NOP
+   522: wait_nop_2:
+   523: 0001B3   0000  NOP
+   524: 0001B4   0000  NOP
+   525: 0001B5   CFEA  RJMP   delay_cycle
+   526:    
  -> Warning 001: 1 symbol(s) defined, but not used!
 
 Program             :      391 words.
@@ -546,4 +561,4 @@ Total program memory:      391 words.
 Eeprom space        :        0 bytes.
 Data segment        :        0 bytes.
 Compilation completed, no errors.
-Compilation ended 23.04.2023, 23:24:23
+Compilation ended 24.04.2023, 13:49:40

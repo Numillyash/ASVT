@@ -1,0 +1,56 @@
+LABEL_5:
+   JMP    LABEL_1
+   JMP    LABEL_2
+   JMP    LABEL_2
+   JMP    LABEL_2
+   JMP    LABEL_2
+   JMP    LABEL_2
+   JMP    LABEL_2
+   JMP    LABEL_2
+   JMP    LABEL_2
+   JMP    LABEL_2
+   JMP    LABEL_2
+   JMP    LABEL_2
+   JMP    LABEL_2
+   JMP    LABEL_2
+   JMP    LABEL_2
+   JMP    LABEL_2
+   JMP    LABEL_2
+   JMP    LABEL_2
+   JMP    LABEL_2
+   JMP    LABEL_2
+   JMP    LABEL_2
+   JMP    LABEL_2
+   JMP    LABEL_2
+   JMP    LABEL_2
+   JMP    LABEL_2
+   JMP    LABEL_2
+LABEL_1:
+   CLR    R1
+   OUT    SREG, R1
+   SER    R28
+   LDI    R29, 8
+   OUT    SPH, R29
+   OUT    SPL, R28
+   CALL   LABEL_3
+   JMP    LABEL_4
+LABEL_2:
+   JMP    LABEL_5
+LABEL_3:
+   LDI    R25, 64
+LABEL_7:
+   STS    124, R25
+   LDS    R24, 122
+   ORI    R24, 64
+   STS    122, R24
+LABEL_6:
+   LDS    R24, 122
+   SBRC   R24, 6
+   RJMP   LABEL_6
+   LDS    R18, 120
+   LDS    R19, 121
+   RJMP   LABEL_7
+LABEL_4:
+   CLI    
+LABEL_8:
+   RJMP   LABEL_8

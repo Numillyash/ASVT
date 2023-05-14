@@ -1,0 +1,96 @@
+gavrasm Gerd's AVR assembler version 5.4 (C)2022 by DG4FAC
+----------------------------------------------------------
+Source file: PWM_new.asm
+Hex file:    PWM_new.hex
+Eeprom file: PWM_new.eep
+Compiled:    13.04.2023, 05:07:49
+Pass:        2
+     1: ;
+     2: ; AssemblerApplication1.asm
+     3: ;
+     4: ; Created: 06.02.2023 18:38:51
+     5: ; Author : Georgul
+     6: ;
+     7: .device atmega328p
+     8: .def pinD6_reg = R24
+     9: .def pinD5_reg = R28
+    10: .def tmp_reg = R20
+    11: 
+    12: start:
+    13: 000000   2411  CLR    R1            ; R1 = 0
+    14: 000001   BE1F  OUT    SREG, R1      ; reset SREG
+    15: 000002   EF4F  SER    tmp_reg       ; tmp = 255
+    16: 000003   BF4D  OUT    SPL, tmp_reg  ; setup stack: low  is 255
+    17: 000004   E048  LDI    tmp_reg, 8    ; tmp = 8
+    18: 000005   BF4E  OUT    SPH, tmp_reg  ; setup stack: high is 8
+    19: setup:
+    20: 000006   94F8  CLI                        ; stop interrupts
+    21: 000007   9A56  SBI    DDRD, 6             ; open pin_D6 port to OUT
+    22: 000008   9A55  SBI    DDRD, 5             ; open pin_D5 port to OUT
+    23: 000009   EA43  LDI    tmp_reg, 163        ; setup timer
+    24: 00000A   BD44  OUT    TCCR0A, tmp_reg
+    25: 00000B   E044  LDI    tmp_reg, 4          ; setup timer
+    26: 00000C   BD45  OUT    TCCR0B, tmp_reg
+    27: 00000D   9478  SEI                        ; start interrupts
+    28: 00000E   E0C1  LDI    pinD5_reg, 1        ; setup register with 1 
+    29: loop:
+    30: 00000F   BDC8  OUT    OCR0B, pinD5_reg       ; setup d5 percent
+    31: 000010   2F8C  MOV    pinD6_reg, pinD5_reg   ; copy d5 to d6
+    32: 000011   9580  COM    pinD6_reg              ; d6 = 255 - d6
+    33: 000012   BD87  OUT    OCR0A, pinD6_reg       ; setup d6 percent
+    34: 000013   5FCF  SUBI   pinD5_reg, 255         ; d5 ++
+    35: 000014   940E  CALL   delay_setup
+        000015   0017
+    36: 000016   CFF8  RJMP   loop
+    37: delay_setup:
+    38: 000017   2700  CLR R16
+    39: 000018   2711  CLR R17
+    40: 000019   2722  CLR R18
+    41: 00001A   2744  CLR tmp_reg
+    42: 00001B   E000  LDI R16, 0 
+    43: 00001C   E012  LDI R17, 2 ; delay 42
+    44: 00001D   0F00  LSL R16
+    45: 00001E   FB17  BST R17, 7
+    46: 00001F   F900  BLD R16, 0
+    47: 000020   0F11  LSL R17
+    48: 000021   0F00  LSL R16
+    49: 000022   FB17  BST R17, 7
+    50: 000023   F900  BLD R16, 0
+    51: 000024   0F11  LSL R17
+    52: micro_cycle:
+    53: 000025   5021  SUBI R18, 1 ; 1 tick
+    54: 000026   4010  SBCI R17, 0 ; 1 tick
+    55: 000027   4000  SBCI R16, 0 ; 1 tick
+    56: 
+    57: 000028   1304  CPSE R16, tmp_reg ; 1 ticks, if equal then skip (2 ticks)
+    58: 000029   C008  RJMP wait_nop_8 ; 2 ticks
+    59: 00002A   1314  CPSE R17, tmp_reg ; 1 ticks, if equal then skip (2 ticks)
+    60: 00002B   C009  RJMP wait_nop_5 ; 2 ticks
+    61: 00002C   1324  CPSE R18, tmp_reg ; 1 ticks, if equal then skip (2 ticks)
+    62: 00002D   C00A  RJMP wait_nop_2 ; 2 ticks
+    63: 00002E   0000  NOP
+    64: 00002F   0000  NOP
+    65: 000030   0000  NOP
+    66: 000031   9508  RET                        ; go back, 4 ticks
+    67: wait_nop_8:
+    68: 000032   0000  NOP
+    69: 000033   0000  NOP
+    70: 000034   0000  NOP
+    71: wait_nop_5:
+    72: 000035   0000  NOP
+    73: 000036   0000  NOP
+    74: 000037   0000  NOP
+    75: wait_nop_2:
+    76: 000038   0000  NOP
+    77: 000039   0000  NOP
+    78: 00003A   CFEA  RJMP   micro_cycle
+    79:    
+ -> Warning 001: 2 symbol(s) defined, but not used!
+
+Program             :       59 words.
+Constants           :        0 words.
+Total program memory:       59 words.
+Eeprom space        :        0 bytes.
+Data segment        :        0 bytes.
+Compilation completed, no errors.
+Compilation ended 13.04.2023, 05:07:49

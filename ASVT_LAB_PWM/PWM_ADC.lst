@@ -1,0 +1,122 @@
+gavrasm Gerd's AVR assembler version 5.4 (C)2022 by DG4FAC
+----------------------------------------------------------
+Source file: PWM_ADC.asm
+Hex file:    PWM_ADC.hex
+Eeprom file: PWM_ADC.eep
+Compiled:    13.04.2023, 22:07:13
+Pass:        2
+     1: ;
+     2: ; AssemblerApplication1.asm
+     3: ;
+     4: ; Created: 06.02.2023 18:38:51
+     5: ; Author : Georgul
+     6: ;
+     7: .device atmega328p
+     8: .def pinD6_reg = R24
+     9: .def pinD5_reg = R28
+    10: .def tmp_reg = R20
+    11: .def pinA5_reg = R18
+    12: 
+    13: start:
+    14: 000000   EF4F  SER    tmp_reg       ; tmp = 255
+    15: 000001   BF4D  OUT    SPL, tmp_reg  ; setup stack: low  is 255
+    16: 000002   E048  LDI    tmp_reg, 8    ; tmp = 8
+    17: 000003   BF4E  OUT    SPH, tmp_reg  ; setup stack: high is 8
+    18: setup:
+    19: 000004   94F8  CLI                        ; stop interrupts
+    20:    ; setup PWM
+    21: 000005   9A56  SBI    DDRD, 6             ; open pin_D6 port to OUT
+    22: 000006   9A55  SBI    DDRD, 5             ; open pin_D5 port to OUT
+    23: 000007   EA43  LDI    tmp_reg, 163        ; setup timer
+    24: 000008   BD44  OUT    TCCR0A, tmp_reg
+    25: 000009   E044  LDI    tmp_reg, 4          ; setup timer
+    26: 00000A   BD45  OUT    TCCR0B, tmp_reg
+    27:    ; setup ADC
+    28: 00000B   E843  ldi tmp_reg, 0b10000011  ; Вкл. Ацп, Однокр. преобр., Прерывание запрещено, СК/8 (125 kHz)
+    29: 00000C   9340  sts 0x0050, tmp_reg
+        00000D   0050
+    30: 
+    31: 00000E   E645  ldi tmp_reg, 0b01100101  ; AVcc, Внеш. конд. на Aref, Выравн. по лев. краю, channel 1.23V bg
+    32:                            ; ADC Channel 5 (PortC.5 ; pin 28)
+    33: 00000F   9340  sts 0x007C, tmp_reg
+        000010   007C
+    34: 
+    35:    ;;SEI                        ; start interrupts
+    36: 000011   E0C1  LDI    pinD5_reg, 1        ; setup register with 1 
+    37: loop:
+    38:    ;OUT    OCR0B, pinD5_reg       ; setup d5 percent
+    39: 000012   D027  rcall adc_convert
+    40: 000013   2F82  mov pinD6_reg, pinA5_reg
+    41:    ;OUT    OCR0A, pinD6_reg       ; setup d6 percent
+    42: 000014   5FCF  SUBI   pinD5_reg, 255         ; d5 ++
+    43:    ;CALL   delay_setup
+    44: 000015   CFFC  RJMP   loop
+    45: delay_setup:
+    46: 000016   2700  CLR R16
+    47: 000017   2711  CLR R17
+    48: 000018   2722  CLR R18
+    49: 000019   2744  CLR tmp_reg
+    50: 00001A   E000  LDI R16, 0 ; here is the hihest byte
+    51: 00001B   E013  LDI R17, 3 ; here is the lowest byte
+    52: 00001C   0F00  LSL R16
+    53: 00001D   FB17  BST R17, 7
+    54: 00001E   F900  BLD R16, 0
+    55: 00001F   0F11  LSL R17
+    56: 000020   0F00  LSL R16
+    57: 000021   FB17  BST R17, 7
+    58: 000022   F900  BLD R16, 0
+    59: 000023   0F11  LSL R17
+    60: delay_cycle:
+    61: 000024   5021  SUBI R18, 1 ; 1 tick
+    62: 000025   4010  SBCI R17, 0 ; 1 tick
+    63: 000026   4000  SBCI R16, 0 ; 1 tick
+    64: 
+    65: 000027   1304  CPSE R16, tmp_reg ; 1 ticks, if equal then skip (2 ticks)
+    66: 000028   C008  RJMP wait_nop_8 ; 2 ticks
+    67: 000029   1314  CPSE R17, tmp_reg ; 1 ticks, if equal then skip (2 ticks)
+    68: 00002A   C009  RJMP wait_nop_5 ; 2 ticks
+    69: 00002B   1324  CPSE R18, tmp_reg ; 1 ticks, if equal then skip (2 ticks)
+    70: 00002C   C00A  RJMP wait_nop_2 ; 2 ticks
+    71: 00002D   0000  NOP
+    72: 00002E   0000  NOP
+    73: 00002F   0000  NOP
+    74: 000030   9508  RET                        ; go back, 4 ticks
+    75: wait_nop_8:
+    76: 000031   0000  NOP
+    77: 000032   0000  NOP
+    78: 000033   0000  NOP
+    79: wait_nop_5:
+    80: 000034   0000  NOP
+    81: 000035   0000  NOP
+    82: 000036   0000  NOP
+    83: wait_nop_2:
+    84: 000037   0000  NOP
+    85: 000038   0000  NOP
+    86: 000039   CFEA  RJMP   delay_cycle
+    87:    
+    88: adc_convert:
+    89: 00003A   9140  LDS tmp_reg, 0x007A
+        00003B   007A
+    90: 00003C   9AA6  SBI tmp_reg, ADSC    ; Start Convertion
+    91: 00003D   9340  STS 0x007A, tmp_reg
+        00003E   007A
+    92: mcro_cycle:
+    93: 00003F   9140  LDS tmp_reg, 0x007A
+        000040   007A
+    94: 000041   99A6  SBIC tmp_reg , ADSC
+    95: 000042   CFFC  rjmp mcro_cycle
+    96: 000043   9340  STS ADCSRA, tmp_reg
+        000044   007A
+    97: 000045   9120  LDS pinA5_reg, ADCH    ; wreg contains result
+        000046   0079
+    98: 000047   B92B  OUT PORTD, pinA5_reg
+    99: 000048   9508  ret
+ -> Warning 001: 3 symbol(s) defined, but not used!
+
+Program             :       73 words.
+Constants           :        0 words.
+Total program memory:       73 words.
+Eeprom space        :        0 bytes.
+Data segment        :        0 bytes.
+Compilation completed, no errors.
+Compilation ended 13.04.2023, 22:07:13

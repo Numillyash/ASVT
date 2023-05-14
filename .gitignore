@@ -41,11 +41,15 @@ CMakeCache.txt
 *.dis
 *.obj
 
+/Project 3-5-6/pico-i2c/*.hex
+/Project 3-5-6/pico-i2c/Makefile
 /Project 3-5-6/pico-i2c/pico-sdk/
 /Project 3-5-6/pico-i2c/elf2uf2/
 /Project 3-5-6/pico-i2c/CMakeFiles/
 /Project 3-5-6/pico-i2c/pioasm/
 /Project 3-5-6/pico-i2c/generated/
+/Project 3-5-6/pico-pwm-audio-main/*.hex
+/Project 3-5-6/pico-pwm-audio-main/Makefile
 /Project 3-5-6/pico-pwm-audio-main/pico-sdk/
 /Project 3-5-6/pico-pwm-audio-main/elf2uf2/
 /Project 3-5-6/pico-pwm-audio-main/CMakeFiles/

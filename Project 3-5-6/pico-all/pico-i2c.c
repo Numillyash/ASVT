@@ -10,9 +10,9 @@
 // Audio PIN is to match some of the design guide shields.
 #define AUDIO_PIN 20 // you can change this to whatever you like
 static const uint I2C_SLAVE_ADDRESS = 0x08;
-static const uint I2C_BAUDRATE = 100000; // 100 kHz
-static const uint I2C_SLAVE_SDA_PIN = 0; // 4
-static const uint I2C_SLAVE_SCL_PIN = 1; // 5
+static const uint I2C_BAUDRATE = 100000;                        // 100 kHz
+static const uint I2C_SLAVE_SDA_PIN = PICO_DEFAULT_I2C_SDA_PIN; // 4
+static const uint I2C_SLAVE_SCL_PIN = PICO_DEFAULT_I2C_SCL_PIN; // 5
 const uint LED_PIN = PICO_DEFAULT_LED_PIN;
 
 /*

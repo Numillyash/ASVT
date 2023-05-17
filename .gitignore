@@ -41,6 +41,13 @@ CMakeCache.txt
 *.dis
 *.obj
 
+/Project 3-5-6/pico-all/*.hex
+/Project 3-5-6/pico-all/Makefile
+/Project 3-5-6/pico-all/pico-sdk/
+/Project 3-5-6/pico-all/elf2uf2/
+/Project 3-5-6/pico-all/CMakeFiles/
+/Project 3-5-6/pico-all/pioasm/
+/Project 3-5-6/pico-all/generated/
 /Project 3-5-6/pico-i2c/*.hex
 /Project 3-5-6/pico-i2c/Makefile
 /Project 3-5-6/pico-i2c/pico-sdk/

@@ -23,9 +23,9 @@ void Decrypt() {
     Serial.println("Bad string: Length of key not equal length of message");
   message = "";
   int8_t tmp_sym;
-  key.toLowerCase();
+  key.toUpperCase();
   for (int i = 0; i < encrypted.getSize(); i++) {
-    if (key[i] < 'a' || key[i] > 'z') {
+    if (key[i] < 'A' || key[i] > 'Z') {
       Serial.println("Bad string: key symbol out of alphabet");
       goto end;
     }
@@ -33,14 +33,50 @@ void Decrypt() {
       Serial.println("Bad string: enc number out of alphabet");
       goto end;
     }
-    tmp_sym = key[i] - 'a';
+    tmp_sym = key[i] - 'A';
     tmp_sym = (encrypted[i]-tmp_sym);
     if(tmp_sym < 0)
       tmp_sym+= 26;
-    message+=(char)(tmp_sym+'a');
+    message+=(char)(tmp_sym+'A');
   }
   Serial.print("Message is: ");
   Serial.println(message);
+end:
+  return;
+}
+
+void Encrypt() {
+  // code to decrypt
+  if (message.length() == 0)
+    Serial.println("Bad string: Length of message is zero");
+  if (key.length() == 0)
+    Serial.println("Bad string: Length of key is zero");
+  if (message.length() != key.length())
+    Serial.println("Bad string: Length of key not equal length of message");
+  encrypted.removeAll();
+  int8_t tmp_sym;
+  message.toUpperCase();
+  for (int i = 0; i < message.length(); i++) {
+    if (message[i] < 'A' || message[i] > 'Z') {
+      Serial.println("Bad string: message symbol out of alphabet");
+      goto end;
+    }
+    if (key[i] < 'A' || key[i] > 'Z') {
+      Serial.println("Bad string: key symbol out of alphabet");
+      goto end;
+    }
+    tmp_sym = key[i]-'A';
+    tmp_sym = (message[i]-'A'+tmp_sym);
+    if(tmp_sym > 26)
+      tmp_sym -= 26;
+    uint8_t adding = (uint8_t)tmp_sym;
+    encrypted.addLast(adding);
+  }
+  Serial.print("Encrypted is: ");
+  for(int i = 0; i < message.length(); i++){
+  Serial.print((char)(encrypted[i]+'A'));
+  }
+  Serial.println();
 end:
   return;
 }
@@ -63,8 +99,12 @@ bool ParseString() {
     sz++;
   }
   if (sz == 1) {
-    if (tmp[0].compareTo("read") == 0) {
+    if (tmp[0].compareTo("decrypt") == 0) {
       Decrypt();
+      return true;
+    }
+    else if (tmp[0].compareTo("encrypt") == 0) {
+      Encrypt();
       return true;
     } else if (tmp[0].compareTo("print") == 0) {
       Serial.print("message: ");
@@ -91,7 +131,7 @@ bool ParseString() {
     key = "";
     key += tmp[2];
     return true;
-  } else if (tmp[1].compareTo("-msg") == 0) {
+  } else if (tmp[1].compareTo("-enc") == 0) {
     char key_tmp[256];
     tmp[2].toCharArray(key_tmp, 255);
     pch = strtok(key_tmp, "-");
@@ -104,6 +144,11 @@ bool ParseString() {
       encrypted.add(tmp_num);
       pch = strtok(NULL, "-");
     }
+    return true;
+  }
+  else if (tmp[1].compareTo("-msg") == 0) {
+    message = "";
+    message += tmp[2];
     return true;
   } else
     return false;

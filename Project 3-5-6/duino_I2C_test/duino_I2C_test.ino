@@ -39,6 +39,11 @@ transmission:
   Wire.beginTransmission(8); // transmit to device #8
   Wire.write('?');           // send "END"
   Wire.endTransmission();
+
+  long t = 1500 * (long)(MLEN + 2) + 2000;
+  Serial.print("Waitin for : ");
+  Serial.println(t);
+  delay(t);
 }
 
 void setup()
@@ -50,10 +55,6 @@ void setup()
 
 void loop()
 {
-  Serial.println("Start new cucle");
-  messageFunction(MLEN, MESSAGE);
-  long t = 1500 * (long)MLEN + 2000;
-  Serial.print("Waitin for : ");
-  Serial.println(t);
-  delay(t);
+  Serial.println("Start new cycle");
+  messageFunction(MLEN, MESSAGE); // Starting transmisson
 }

@@ -67,7 +67,7 @@ void Encrypt() {
     }
     tmp_sym = key[i]-'A';
     tmp_sym = (message[i]-'A'+tmp_sym);
-    if(tmp_sym > 26)
+    if(tmp_sym > 25)
       tmp_sym -= 26;
     uint8_t adding = (uint8_t)tmp_sym;
     encrypted.addLast(adding);
